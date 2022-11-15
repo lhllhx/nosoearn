@@ -12,7 +12,7 @@ Console miner for Noso cryptocoin with PoPW
 
 This software does not need to be installed.
 
-You just need to download the appropriate Windows or Linux(Beta) version, uncompress the arquive and run it from the folder.
+You just need to download the appropriate Windows or Linux version, uncompress the arquive and run it from the folder.
 
 ## Building from source
 
