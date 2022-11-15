@@ -101,9 +101,10 @@ var
     PoolMinningAddress  : string = '';
     WaitingBlock        : boolean = false;
   // Update screen
-  U_Headers     : boolean = false;
-  U_BlockAge    : int64 = 0;
-  U_ActivePool  : boolean = false;
+  U_Headers          : boolean = false;
+  U_BlockAge         : int64 = 0;
+  U_ActivePool       : boolean = false;
+  U_ClearPoolsScreen : boolean = false;
   // Crititical sections
   CS_Log          : TRTLCriticalSection;
   CS_ArrSources   : TRTLCriticalSection;

@@ -4,7 +4,7 @@ program consominer2;
 
 uses
   {$IFDEF UNIX}
-  cthreads,
+  cthreads, UTF8process,
   {$ENDIF}
   Classes, sysutils, consominer2unit, nosodig.crypto,NosoDig.Crypto68b, NosoDig.Crypto68, NosoDig.Crypto65,
   crt, functions, strutils;
@@ -106,6 +106,7 @@ For counter := 0 to length(ArrSources)-1 do
    Gotoxy(41,12+(counter*2)); Write(Format('%12s',[Int2Curr(ArrSources[counter].balance)]));
    Gotoxy(56,12+(counter*2)); Write(Format('%3s',[IntToStr(ArrSources[counter].payinterval)]));
    end;
+U_ClearPoolsScreen := false;
 End;
 
 procedure TMainThread.Execute;
@@ -127,7 +128,7 @@ While not terminated do
       begin
       WaitingBlock := false;
       ClearAllPools();
-      ClearPoolsScreen();
+      U_ClearPoolsScreen := true;
       end;
    if SolutionsLength > 0 then
       SendPoolShare(GetSolution);
@@ -352,6 +353,7 @@ Repeat
    if U_Headers then UpdateHeader;
    if U_ActivePool then UpdateActivePool;
    if U_BlockAge <> UTCtime then UpdateBlockAge;
+   if U_ClearPoolsScreen then ClearPoolsScreen;
    Sleep(1);
 until FinishProgram;
 
