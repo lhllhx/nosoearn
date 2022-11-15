@@ -1,0 +1,73 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    paths-ignore:
+    - "README.md"
+    branches:
+      - "*"
+    tags:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, windows-latest]
+        lazarus-versions: [stable, 2.0.12]
+    steps:
+    - name: Install Lazarus
+      uses: gcarreno/setup-lazarus@v3.0.16
+      with:
+        lazarus-version: ${{ matrix.lazarus-versions }}
+    - uses: actions/checkout@v2
+    - name: Unzip packages
+      run: unzip -q Packages/\*.zip -d Packages
+    - name: Install packages
+      run: |
+        lazbuild -qqq Packages/Indy10/indylaz.lpk
+    - name: Build the Main Application
+      run: lazbuild -B --bm="Release" "consominer2.lpi"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.operating-system }}
+        path: |
+          consominer2
+          consominer2.exe
+
+  package-release:
+    if: contains(github.ref, '/tags/')
+    name: Package and Upload
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v2
+        name: Download Artifacts
+      - name: List everything
+        run: |
+          ls -al
+          ls -al windows-latest
+          ls -al ubuntu-latest
+      - name: Package Windows
+        run: |
+          cp windows-latest/consominer2.exe .
+          tag=${{ github.event.ref }}
+          tag=${tag#"refs/tags/"}
+          zip consominer2-${tag}-x86_64-win64.zip consominer2.exe
+      - name: Package Linux
+        run: |
+          cp ubuntu-latest/consominer2 .
+          tag=${{ github.event.ref }}
+          tag=${tag#"refs/tags/"}
+          chmod +x consominer2
+          tar -zcvf consominer2-${tag}-x86_64-linux.tar.gz consominer2
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            consominer2-*.zip
+            consominer2-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

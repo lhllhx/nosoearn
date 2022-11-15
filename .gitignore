@@ -1,0 +1,14 @@
+/lib
+/backup
+/locale
+consominer2
+consominer2.cfg
+consominer2.exe
+consominer2.dbg
+gitinst.txt
+data.txt
+log.txt
+*.res
+*.lps
+*.mo
+
