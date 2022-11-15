@@ -1,4 +1,4 @@
-name: build consominer2
+name: Build consominer2
 
 on:
   pull_request:
@@ -16,10 +16,20 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest]
-        lazarus-versions: [stable, 2.0.12]
+        lazarus-versions: [2.0.12]
     steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/instantfpc
+          ~/.lazarus
+          /usr/share/lazarus/${{ matrix.lazarus-versions }}
+          /usr/bin/lazbuild
+        key: ${{ runner.os }}-laz-${{ matrix.lazarus-versions }}-v1
+        restore-keys: |
+          ${{ runner.os }}-laz-
     - name: Install Lazarus
-      uses: gcarreno/setup-lazarus@v3.0.16
+      uses: gcarreno/setup-lazarus@v2.2.9
       with:
         lazarus-version: ${{ matrix.lazarus-versions }}
     - uses: actions/checkout@v2
@@ -37,6 +47,7 @@ jobs:
         path: |
           consominer2
           consominer2.exe
+
   package-release:
     if: contains(github.ref, '/tags/')
     name: Package and Upload
@@ -61,13 +72,12 @@ jobs:
           cp ubuntu-latest/consominer2 .
           tag=${{ github.event.ref }}
           tag=${tag#"refs/tags/"}
-          chmod +x consominer2
-          tar -zcvf consominer2-${tag}-x86_64-linux.tar.gz consominer2
+          tar -zcvf consominer2-${tag}-x86_64-linux.tgz consominer2
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             consominer2-*.zip
-            consominer2-*.tar.gz
+            consominer2-*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
