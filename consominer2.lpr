@@ -26,9 +26,27 @@ Type
       Constructor Create(CreateSuspended : boolean; const Thisnumber:integer);
     end;
 
+    TNosoHashFn = function(S: String): THash32;
+      THashLibs = (hl65, hl68, hl69, hl70);
+
+    TNosoHashLib = packed record
+      Name: String;
+      HashFn: TNosoHashFn;
+    end;
+
+CONST
+     NOSOHASH_LIBS: array[THashLibs] of TNosoHashLib =
+    (
+    (Name: 'NosoHash v65'; HashFn: @NosoHash65),
+    (Name: 'NosoHash v68'; HashFn: @NosoHash68),
+    (Name: 'NosoHash v69'; HashFn: @NosoHash68b),
+    (Name: 'NosoHash v70'; HashFn: @NosoHash)
+    );
+
 var
   MainThread    : TMainThread;
   MinerThread   : TMinerThread;
+  CurrHashLib   : THashLibs;
 
 
 Constructor TMinerThread.Create(CreateSuspended : boolean; const Thisnumber:integer);
@@ -59,10 +77,13 @@ While ((not FinishMiners) and (not EndThisThread)) do
    begin
    BaseHash := ThisPrefix+MyCounter.ToString;
    Inc(MyCounter);
+   ThisHash := NOSOHASH_LIBS[CurrHashLib].HashFn(BaseHash+PoolMinningAddress);
+   {
    if Myhashlib = 70 then ThisHash := NosoHash(BaseHash+PoolMinningAddress)
    else if Myhashlib = 69 then ThisHash := NosoHash68b(BaseHash+PoolMinningAddress)
    else if Myhashlib = 68 then ThisHash := NosoHash68(BaseHash+PoolMinningAddress)
    else if Myhashlib = 65 then ThisHash := NosoHash65(BaseHash+PoolMinningAddress);
+   }
    ThisDiff := GetHashDiff(TargetHash,ThisHash);
    if ThisDiff<ThreadBest then
       begin
@@ -109,68 +130,70 @@ For counter := 0 to length(ArrSources)-1 do
 U_ClearPoolsScreen := false;
 End;
 
-procedure TMainThread.Execute;
+Procedure LaunchMiners();
 var
   SourceResult : Boolean;
   Counter      : integer;
 Begin
+Setstatusmsg('Syncing...',yellow);
+Repeat
+   sleep(100);
+   SourceResult := CheckSource;
+until SourceResult ;
+U_Headers := true;
+ResetIntervalHashes;
+FinishMiners := false;
+ClearSolutions();
+LastSpeedCounter := 100000000;
+for counter := 1 to MyCPUCount do
+   begin
+   MinerThread := TMinerThread.Create(true,counter);
+   MinerThread.FreeOnTerminate:=true;
+   MinerThread.Start;
+   sleep(1);
+   end;
+SetOMT(MyCPUCount);
+U_ActivePool := true;
+End;
+
+procedure TMainThread.Execute;
+Begin
 While not terminated do
    begin
    CheckLog;
-   if ( (blockage>=585) and (Not WaitingBlock) ) then
-      begin
-      FinishMiners := true;
-      WaitingBlock := true;
-      Setstatusmsg('Waiting next block',green);
-      end;
-   if ( (blockAge>=10) and (blockage<584) and (WaitingBlock) and (not AllFilled) ) then
-      begin
-      WaitingBlock := false;
-      ClearAllPools();
-      U_ClearPoolsScreen := true;
-      end;
    if SolutionsLength > 0 then
       SendPoolShare(GetSolution);
-   if WaitingBlock then
+   if ( (blockage>=585) and (Not WaitingNextBlock) ) then
       begin
-
-      end
-   else
+      FinishMiners     := true;
+      WaitingNextBlock := true;
+      Setstatusmsg('Waiting next block',green);
+      end;
+   if ( (blockAge>=10) and (blockage<584) ) then
       begin
-      if AllFilled then
+      if WaitingNextBlock then
          begin
-         Setstatusmsg('Waiting next block',green);
-         WaitingBlock := true;
+         WaitingNextBlock := false;
+         ClearAllPools();
+         U_ClearPoolsScreen := true;
+         BlockCompleted := false;
          end
       else
          begin
-         if GetOMTValue =0 then
+         if AllFilled then
             begin
-            Setstatusmsg('Syncing...',yellow);
-            Repeat
-               sleep(100);
-               SourceResult := CheckSource;
-            until SourceResult ;
-            U_Headers := true;
-            ResetIntervalHashes;
-            FinishMiners := false;
-            ClearSolutions();
-            LastSpeedCounter := 100000000;
-            for counter := 1 to MyCPUCount do
+            if not BlockCompleted then
                begin
-               MinerThread := TMinerThread.Create(true,counter);
-               MinerThread.FreeOnTerminate:=true;
-               MinerThread.Start;
-               sleep(1);
+               BlockCompleted := true;
+               Setstatusmsg('All shares completed for this block',green);
                end;
-            SetOMT(MyCPUCount);
-            U_ActivePool := true;
             end
          else
             begin
-
+            if GetOMTValue =0 then
+               LaunchMiners
             end;
-         end;
+         end
       end;
    sleep(1);
    end;
@@ -280,7 +303,10 @@ For CPUsToUse := 1 to maxCPU do
    WriteLn(Format('| %2s    |            |            |            |            |',[IntToStr(CPUsToUse)]));
    for LibToUse := 0 to 3 do
       begin
-      MyHashLib := ArrHashLibs[LibToUse];
+      if LibToUse = 0 then CurrHashLib := hl65;
+      if LibToUse = 1 then CurrHashLib := hl68;
+      if LibToUse = 2 then CurrHashLib := hl69;
+      if LibToUse = 3 then CurrHashLib := hl70;
       ShowResult := Format('%10s',['Running ']);
       ColorMsg(11+(LibToUse*13),9+CPUsToUse,ShowResult,black,red);
       PrintStatus(Format('Testing %d CPUs with hashlib %d',[CPUsToUse,MyHashLib]),Green);
@@ -339,6 +365,10 @@ if MyRunTest then
    readln();
    exit;
    end;
+if Myhashlib = 0 then CurrHashLib := hl65;
+if Myhashlib = 1 then CurrHashLib := hl68;
+if Myhashlib = 2 then CurrHashLib := hl69;
+if Myhashlib = 3 then CurrHashLib := hl70;
 Updateheader;
 Drawpools;
 SetStatusMsg('Consominer2 started!', green);

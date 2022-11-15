@@ -99,7 +99,8 @@ var
   OpenMinerThreads      : integer = 0;
   LastSpeedCounter      : int64 = 100000000;
     PoolMinningAddress  : string = '';
-    WaitingBlock        : boolean = false;
+    WaitingNextBlock    : boolean = false;
+    BlockCompleted      : boolean = false;
   // Update screen
   U_Headers          : boolean = false;
   U_BlockAge         : int64 = 0;

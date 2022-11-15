@@ -129,7 +129,7 @@ Function HashrateToShow(speed:int64):String;
 Begin
 if speed>1000000000 then result := FormatFloat('0.00',speed/1000000000)+' Ghs'
 else if speed>1000000 then result := FormatFloat('0.00',speed/1000000)+' Mhs'
-else if speed>1000 then result := FormatFloat('0.00',speed/1000)+' Khs'
+else if speed>1000 then result := FormatFloat('0',speed/1000)+' Khs'
 else result := speed.ToString+' h/s'
 End;
 
