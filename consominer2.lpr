@@ -120,11 +120,10 @@ While not terminated do
    if ( (blockage>=585) and (Not WaitingBlock) ) then
       begin
       FinishMiners := true;
-      FillAllPools();
       WaitingBlock := true;
       Setstatusmsg('Waiting next block',green);
       end;
-   if ( (blockAge>=10) and (blockage<584) and (WaitingBlock) ) then
+   if ( (blockAge>=10) and (blockage<584) and (WaitingBlock) and (not AllFilled) ) then
       begin
       WaitingBlock := false;
       ClearAllPools();

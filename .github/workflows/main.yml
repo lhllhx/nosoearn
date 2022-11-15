@@ -1,4 +1,4 @@
-name: build
+name: build consominer2
 
 on:
   pull_request:
@@ -28,6 +28,7 @@ jobs:
     - name: Install packages
       run: |
         lazbuild -qqq Packages/Indy10/indylaz.lpk
+
     - name: Build the Main Application
       run: lazbuild -B --bm="Release" "consominer2.lpi"
     - uses: actions/upload-artifact@v2
@@ -36,7 +37,6 @@ jobs:
         path: |
           consominer2
           consominer2.exe
-
   package-release:
     if: contains(github.ref, '/tags/')
     name: Package and Upload
