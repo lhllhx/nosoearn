@@ -366,7 +366,7 @@ while not eof(FileConfig) do
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do
    begin
-   writeln('Error accessing data file: '+E.Message);
+   ToLog('Error accessing data file: '+E.Message);
    exit
    end
 END {TRY};
@@ -383,6 +383,7 @@ Begin
 Result := False;
 Inc(ActivePool);
 if ActivePool>=length(ArrSources) then ActivePool := 0;
+if ArrSources[ActivePool].filled then exit;
 ThisSource := ArrSources[ActivePool];
 ToLog('Connecting '+ThisSource.ip+' ...');
 PoolString := GetPoolSource(ThisSource.ip,ThisSource.port);
