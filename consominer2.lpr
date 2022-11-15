@@ -300,7 +300,7 @@ Writeln(Format('| CPUs  | Hashlib65  | Hashlib68  | Hashlib69  | Hashlib70  |',[
 Writeln('------------------------------------------------------------');
 For CPUsToUse := 1 to maxCPU do
    begin
-   WriteLn(Format('| %2s    |            |            |            |            |',[IntToStr(CPUsToUse)]));
+   Write(Format('| %2s    |            |            |            |            |',[IntToStr(CPUsToUse)]));
    for LibToUse := 0 to 3 do
       begin
       if LibToUse = 0 then CurrHashLib := hl65;
@@ -308,8 +308,7 @@ For CPUsToUse := 1 to maxCPU do
       if LibToUse = 2 then CurrHashLib := hl69;
       if LibToUse = 3 then CurrHashLib := hl70;
       ShowResult := Format('%10s',['Running ']);
-      ColorMsg(11+(LibToUse*13),9+CPUsToUse,ShowResult,black,red);
-      PrintStatus(Format('Testing %d CPUs with hashlib %d',[CPUsToUse,MyHashLib]),Green);
+      ColorMsg(11+(LibToUse*13),Wherey,ShowResult,black,red);
       TestStart := GetTickCount64;
       FinishMiners := false;
       SetOMT(CPUsToUse);
@@ -327,12 +326,13 @@ For CPUsToUse := 1 to maxCPU do
       TestTime := (TestEnd-TestStart);
       CPUSpeed := HashesForTest/(testtime/1000);
       ShowResult := Format('%11s',[FormatFloat('0.00',CPUSpeed*CPUsToUse)]);
-      ColorMsg(11+(LibToUse*13),9+CPUsToUse,ShowResult,green,black);
-      writeLn();
+      ColorMsg(11+(LibToUse*13),Wherey,ShowResult,green,black);
       end;
+   writeLn();
    end;
 Writeln('------------------------------------------------------------');
-PrintStatus('Test completed. Press enter to exit.',red);
+writeln('');
+writeln('Test completed. Press enter to exit.');
 End;
 
 {$R *.res}
