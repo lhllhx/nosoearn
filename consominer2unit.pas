@@ -63,7 +63,7 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer = '1.0';
+  AppVer = '1.1';
   HasheableChars = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
 
 var
@@ -101,6 +101,7 @@ var
     PoolMinningAddress  : string = '';
     WaitingNextBlock    : boolean = false;
     BlockCompleted      : boolean = false;
+    WrongThisPool       : Integer = 0;
   // Update screen
   U_Headers          : boolean = false;
   U_BlockAge         : int64 = 0;
@@ -236,7 +237,14 @@ if Success then
 else // Not send
    begin
    ToLog('Unable to send solution to '+TCPclient.Host);
-   SetStatusMsg('Connection error. Check your internet connection',4{red});
+   SetStatusMsg('Connection error. Check your internet connection: '+WrongThisPool.ToString,4{red});
+   Inc(WrongThisPool);
+   if WrongThisPool = 3 then
+      begin
+      FinishMiners := true;
+      ArrSources[ActivePool].filled:=true;
+      ClearSolutions();
+      end;
    //AddSolution(Data);
    end;
 End;
@@ -419,7 +427,7 @@ if PoolString<> 'ERROR' then // Pool reached
 else
    begin
    Tolog('Connection error. Check your internet connection');
-   SetStatusMsg('Connection error. Check your internet connection',4{red});
+   SetStatusMsg('Unable to connect to pool '+ThisSource.ip,4{red});
    end;
 End;
 

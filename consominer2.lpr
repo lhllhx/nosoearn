@@ -137,12 +137,13 @@ var
 Begin
 Setstatusmsg('Syncing...',yellow);
 Repeat
-   sleep(100);
    SourceResult := CheckSource;
+   If not SourceResult then sleep(1000);
 until SourceResult ;
 U_Headers := true;
 ResetIntervalHashes;
 FinishMiners := false;
+WrongThisPool := 0;
 ClearSolutions();
 LastSpeedCounter := 100000000;
 for counter := 1 to MyCPUCount do
