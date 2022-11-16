@@ -17,14 +17,13 @@ jobs:
     strategy:
       matrix:
         operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
-        lazarus-versions: [ stable, 2.0.12, 2.0.10 ]
+        lazarus-versions: [ stable]
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
       with:
         clean: true
-        submodules: true
         set-safe-directory: true
 
     - name: Install Lazarus

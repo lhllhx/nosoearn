@@ -178,6 +178,7 @@ While not terminated do
          ClearAllPools();
          U_ClearPoolsScreen := true;
          BlockCompleted := false;
+         ActivePool := RandonStartPool;
          end
       else
          begin
@@ -196,7 +197,7 @@ While not terminated do
             end;
          end
       end;
-   sleep(1);
+   sleep(10);
    end;
 End;
 
