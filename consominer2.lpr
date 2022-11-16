@@ -132,14 +132,15 @@ End;
 
 Procedure LaunchMiners();
 var
-  SourceResult : Boolean;
+  SourceResult : integer;
   Counter      : integer;
 Begin
 Setstatusmsg('Syncing...',yellow);
 Repeat
    SourceResult := CheckSource;
-   If not SourceResult then sleep(3000);
-until SourceResult ;
+   If SourceResult=0 then sleep(1000);
+until SourceResult>0;
+if SourceResult=2 then exit;
 U_Headers := true;
 ResetIntervalHashes;
 FinishMiners := false;
@@ -168,9 +169,10 @@ While not terminated do
       begin
       FinishMiners     := true;
       WaitingNextBlock := true;
-      Setstatusmsg('Waiting next block',green);
+      U_WaitNextBlock  := true;
+      ToLog('Started waiting next block');
       end;
-   if ( (blockAge>=10) and (blockage<584) ) then
+   if ( (blockAge>=10) and (blockage<585) ) then
       begin
       if WaitingNextBlock then
          begin
@@ -179,6 +181,7 @@ While not terminated do
          U_ClearPoolsScreen := true;
          BlockCompleted := false;
          ActivePool := RandonStartPool;
+         U_WaitNextBlock := true;
          end
       else
          begin
@@ -188,6 +191,7 @@ While not terminated do
                begin
                BlockCompleted := true;
                Setstatusmsg('All shares completed for this block',green);
+               ToLog('All filled on block '+CurrentBlock.ToString);
                end;
             end
          else
@@ -212,8 +216,8 @@ End;
 
 Procedure UpdateBlockAge();
 Begin
-GotoXy(26,8);Write(Format('%3s',[IntToStr(BlockAge)]));
 GotoXy(55,8);Write(Format('%10s',[HashrateToShow(GetTotalHashes)]));
+GotoXy(26,8);Write(Format('%3s',[IntToStr(BlockAge)]));
 U_BlockAge := UTCTime;
 End;
 
@@ -239,6 +243,16 @@ Gotoxy(1,24);ClrEOL;
 Write(LText);
 Textcolor(LightGray);
 StatusMsg := '';
+End;
+
+Procedure UpdateNextBlockMessage();
+Begin
+Textcolor(Red);
+Gotoxy(1,22);ClrEOL;
+if WaitingNextBlock then
+   Write('Waiting next block');
+Textcolor(LightGray);
+U_WaitNextBlock := false;
 End;
 
 Procedure ColorMsg(x,y:integer;LTexto:String;TexCol,BacCol:Integer);
@@ -367,10 +381,10 @@ if MyRunTest then
    readln();
    exit;
    end;
-if Myhashlib = 0 then CurrHashLib := hl65;
-if Myhashlib = 1 then CurrHashLib := hl68;
-if Myhashlib = 2 then CurrHashLib := hl69;
-if Myhashlib = 3 then CurrHashLib := hl70;
+if Myhashlib = 65 then CurrHashLib := hl65
+else if Myhashlib = 68 then CurrHashLib := hl68
+else if Myhashlib = 69 then CurrHashLib := hl69
+else CurrHashLib := hl70;
 Updateheader;
 Drawpools;
 SetStatusMsg('Consominer2 started!', green);
@@ -385,6 +399,7 @@ Repeat
    if U_ActivePool then UpdateActivePool;
    if U_BlockAge <> UTCtime then UpdateBlockAge;
    if U_ClearPoolsScreen then ClearPoolsScreen;
+   if U_WaitNextBlock then UpdateNextBlockMessage;
    Sleep(1);
 until FinishProgram;
 

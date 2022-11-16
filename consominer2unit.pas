@@ -16,6 +16,7 @@ Type
      filled     : boolean;
      balance    : int64;
      payinterval: integer;
+     FailedTrys : integer;
      end;
 
    TSolution = Packed record
@@ -44,7 +45,7 @@ Procedure SetStatusMsg(Lmessage:string;Lcolor:integer);
 // Disk access
 Procedure CreateConfig();
 Procedure LoadConfig();
-Function CheckSource():Boolean;
+Function CheckSource():integer;
 // Log manage
 Procedure CreateLogFile();
 Procedure Tolog(LLine:String);
@@ -63,7 +64,7 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer = '1.1';
+  AppVer = '1.2';
   HasheableChars = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
 
 var
@@ -107,6 +108,7 @@ var
   U_BlockAge         : int64 = 0;
   U_ActivePool       : boolean = false;
   U_ClearPoolsScreen : boolean = false;
+  U_WaitNextBlock    : boolean = false;
   // Crititical sections
   CS_Log          : TRTLCriticalSection;
   CS_ArrSources   : TRTLCriticalSection;
@@ -209,14 +211,14 @@ if Success then
       begin
       Inc(ArrSources[ActivePool].shares);
       U_ActivePool := true;
-      SetStatusMsg('Submmited share : '+ArrSources[ActivePool].shares.ToString,2{green});
+      SetStatusMsg('Submmited share '+ArrSources[ActivePool].shares.ToString+' to '+ArrSources[ActivePool].ip,2{green});
       if ArrSources[ActivePool].shares >= MyMaxShares then
          begin
-         FinishMiners := true;
          ArrSources[ActivePool].filled:=true;
          ClearSolutions();
+         Sleep(10);
+         FinishMiners := true;
          end;
-      //ToLog(Format('Submited share[%d]: %s',[GoodThis,Data.Diff]));
       end
    else
       begin
@@ -224,14 +226,10 @@ if Success then
       // Filter here if Shares limit was reached
       If AnsiContainsStr(ResultLine,'SHARES_LIMIT') then
          begin
-         //ToLog('Shares limite reached. Stopping miner');
-         //ShareLimitStr := 'Shares limit reached - ';
+         ClearSolutions();
+         Sleep(10);
          FinishMiners := true;
          ArrSources[ActivePool].filled:=true;
-         ClearSolutions();
-         //PauseMiners := true;
-         //Inc(CompletedPools);
-         //JumpPool := true;
          end;
       end;
    end
@@ -269,6 +267,7 @@ Repeat
       ArrSources[length(ArrSources)-1].shares:=0;
       ArrSources[length(ArrSources)-1].balance:=0;
       ArrSources[length(ArrSources)-1].payinterval:=0;
+      ArrSources[length(ArrSources)-1].FailedTrys:=0;
       end;
    Inc(Counter);
    end;
@@ -314,8 +313,10 @@ Begin
 EnterCriticalSection(CS_ArrSources);
 For counter := 0 to length(ArrSources)-1 do
    begin
-   ArrSources[counter].filled := false;
-   ArrSources[counter].Shares := 0;
+   ArrSources[counter].filled     := false;
+   ArrSources[counter].Shares     := 0;
+   ArrSources[counter].FailedTrys := 0;
+
    end;
 LeaveCriticalSection(CS_ArrSources);
 End;
@@ -383,7 +384,7 @@ EXCEPT ON E:EXCEPTION do
 END {TRY};
 End;
 
-Function CheckSource():Boolean;
+Function CheckSource():integer;
 var
   ReachedNodes : integer = 0;
   ThisSource   : TSourcesData;
@@ -391,17 +392,18 @@ var
   PoolPayStr : string = '';
   PoolPayData : TPayment;
 Begin
-Result := False;
-Inc(ActivePool);
-if ActivePool>=length(ArrSources) then ActivePool := 0;
-if ArrSources[ActivePool].filled then exit;
+Result := 0;
+Repeat
+   Inc(ActivePool);
+   if ActivePool>=length(ArrSources) then ActivePool := 0;
+until not ArrSources[ActivePool].filled;
 ThisSource := ArrSources[ActivePool];
 ToLog('Connecting '+ThisSource.ip+' ...');
 PoolString := GetPoolSource(ThisSource.ip,ThisSource.port);
 if PoolString<> 'ERROR' then // Pool reached
    begin
    ToLog(ThisSource.ip+': '+PoolString);
-   result := true;
+   result := 1;
    MAINPREFIX             := Parameter(PoolString,1);
    PoolMinningAddress     := Parameter(PoolString,2);
    TargetHash             := Parameter(PoolString,4);
@@ -427,8 +429,14 @@ if PoolString<> 'ERROR' then // Pool reached
    end
 else
    begin
+   Inc(ArrSources[ActivePool].FailedTrys);
    Tolog('Connection error. Check your internet connection');
-   SetStatusMsg('Unable to connect to pool '+ThisSource.ip,4{red});
+   if ArrSources[ActivePool].FailedTrys >= 5 then
+      begin
+      ArrSources[ActivePool].filled:=true;
+      result := 2;
+      end
+   else SetStatusMsg(format('Failed connecting to %s (%d)',[ThisSource.ip,ArrSources[ActivePool].FailedTrys]),4{red});
    end;
 End;
 
