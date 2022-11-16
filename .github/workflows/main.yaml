@@ -1,83 +1,113 @@
-name: Build consominer2
+name: build
 
 on:
-  pull_request:
   push:
-    paths-ignore:
-    - "README.md"
-    branches:
-      - "*"
-    tags:
-      - "*"
+    branches: [ main ]
+    tags: [ "*" ]
+    paths-ignore: [ "README.md", "history.md", "release-notes.md" ]
+
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
+    name: Build and/or Test
     runs-on: ${{ matrix.operating-system }}
+
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest]
-        lazarus-versions: [2.2.2]
+        operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
+        lazarus-versions: [ stable, 2.0.12, 2.0.10 ]
+
     steps:
-    - uses: actions/cache@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v3
       with:
-        path: |
-          ~/.cache/instantfpc
-          ~/.lazarus
-          /usr/share/lazarus/${{ matrix.lazarus-versions }}
-          /usr/bin/lazbuild
-        key: ${{ runner.os }}-laz-${{ matrix.lazarus-versions }}-v1
-        restore-keys: |
-          ${{ runner.os }}-laz-
+        clean: true
+        submodules: true
+        set-safe-directory: true
+
     - name: Install Lazarus
       uses: gcarreno/setup-lazarus@v3.2
       with:
         lazarus-version: ${{ matrix.lazarus-versions }}
-    - uses: actions/checkout@v2
-    - name: Unzip packages
-      run: unzip -q Packages/\*.zip -d Packages
-    - name: Install packages
-      run: |
-        lazbuild -qqq Packages/Indy10/indylaz.lpk
+        with-cache: false
 
-    - name: Build the Main Application
-      run: lazbuild -B --bm="Release" "consominer2.lpi"
-    - uses: actions/upload-artifact@v2
+    - name: Build the Main App (Windows)
+      if: ${{ matrix.operating-system == 'windows-latest' }}
+      run: |
+        lazbuild -B --bm=Release "consominer2.lpi"
+        mv consominer2.exe consominer2-x86_64-win64.exe
+
+    - name: Build the Main App (Ubuntu)
+      if: ${{ matrix.operating-system == 'ubuntu-latest' }}
+      run: |
+        lazbuild -B --bm=Release "consominer2.lpi"
+        mv consominer2 consominer2-x86_64-linux
+
+    - name: Build the Main App (macOS)
+      if: ${{ matrix.operating-system == 'macos-latest' }}
+      run: |
+        lazbuild -B --bm=Release "consominer2.lpi"
+        mv consominer2 consominer2-x86_64-darwin
+
+    - name: Upload binary (Windows)
+      if: ${{ (matrix.operating-system == 'windows-latest')  &&  (matrix.lazarus-versions == 'stable') }}
+      uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.operating-system }}
-        path: |
-          consominer2
-          consominer2.exe
+        name: consominer2
+        path: consominer2-x86_64-win64.exe
+
+    - name: Upload binary (Ubuntu)
+      if: ${{ (matrix.operating-system == 'ubuntu-latest')  &&  (matrix.lazarus-versions == 'stable') }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: consominer2
+        path: consominer2-x86_64-linux
+
+    - name: Upload binary (macOS)
+      if: ${{ (matrix.operating-system == 'macos-latest')  &&  (matrix.lazarus-versions == 'stable') }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: consominer2
+        path: consominer2-x86_64-darwin
 
   package-release:
     if: contains(github.ref, '/tags/')
-    name: Package and Upload
+
+    name: Package and create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: build
+
     steps:
-      - uses: actions/download-artifact@v2
-        name: Download Artifacts
-      - name: List everything
-        run: |
-          ls -al
-          ls -al windows-latest
-          ls -al ubuntu-latest
-      - name: Package Windows
-        run: |
-          cp windows-latest/consominer2.exe .
-          tag=${{ github.event.ref }}
-          tag=${tag#"refs/tags/"}
-          zip consominer2-${tag}-x86_64-win64.zip consominer2.exe
-      - name: Package Linux
-        run: |
-          cp ubuntu-latest/consominer2 .
-          tag=${{ github.event.ref }}
-          tag=${tag#"refs/tags/"}
-          tar -zcvf consominer2-${tag}-x86_64-linux.tgz consominer2
-      - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            consominer2-*.zip
-            consominer2-*.tgz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set output
+      id: vars
+      run: echo "tag=${GITHUB_REF#refs/*/}" >> ${GITHUB_OUTPUT}
+
+    - name: Download the Release binary
+      uses: actions/download-artifact@v2
+
+    - name: List files
+      run: ls -alF consominer2
+
+    - name: Create release files
+      run: |
+        cd consominer2
+        chmod +x consominer2-x86_64-linux consominer2-x86_64-darwin
+        zip -r consominer2-${{ steps.vars.outputs.tag }}-x86_64-win64.zip consominer2-x86_64-win64.exe
+        tar -zcvf consominer2-${{ steps.vars.outputs.tag }}-x86_64-linux.tar.gz consominer2-x86_64-linux
+        tar -zcvf consominer2-${{ steps.vars.outputs.tag }}-x86_64-darwin.tar.gz consominer2-x86_64-darwin
+
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: consominer2 ${{ steps.vars.outputs.tag }}
+        body_path: release-notes.md
+        files: |
+          consominer2/*.tar.gz
+          consominer2/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
