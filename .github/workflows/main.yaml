@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     tags: [ "*" ]
-    paths-ignore: [ "README.md", "history.md", "release-notes.md" ]
+    paths-ignore: [ "README.md", "changelog.txt", "releasenotes.txt" ]
 
   pull_request:
     branches: [ main ]
@@ -105,7 +105,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         name: consominer2 ${{ steps.vars.outputs.tag }}
-        body_path: release-notes.md
+        body_path: releasenotes.txt
         files: |
           consominer2/*.tar.gz
           consominer2/*.zip
