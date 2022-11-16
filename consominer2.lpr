@@ -138,7 +138,7 @@ Begin
 Setstatusmsg('Syncing...',yellow);
 Repeat
    SourceResult := CheckSource;
-   If not SourceResult then sleep(1000);
+   If not SourceResult then sleep(3000);
 until SourceResult ;
 U_Headers := true;
 ResetIntervalHashes;

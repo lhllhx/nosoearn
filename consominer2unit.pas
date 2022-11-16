@@ -209,6 +209,7 @@ if Success then
       begin
       Inc(ArrSources[ActivePool].shares);
       U_ActivePool := true;
+      SetStatusMsg('Submmited share : '+ArrSources[ActivePool].shares.ToString,2{green});
       if ArrSources[ActivePool].shares >= MyMaxShares then
          begin
          FinishMiners := true;

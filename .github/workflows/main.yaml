@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest]
-        lazarus-versions: [2.0.12]
+        lazarus-versions: [2.2.2]
     steps:
     - uses: actions/cache@v2
       with:
