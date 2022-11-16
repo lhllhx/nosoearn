@@ -29,7 +29,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-laz-
     - name: Install Lazarus
-      uses: gcarreno/setup-lazarus@v2.2.9
+      uses: gcarreno/setup-lazarus@v3.2
       with:
         lazarus-version: ${{ matrix.lazarus-versions }}
     - uses: actions/checkout@v2
