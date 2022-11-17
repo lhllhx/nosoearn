@@ -47,6 +47,7 @@ var
   MainThread    : TMainThread;
   MinerThread   : TMinerThread;
   CurrHashLib   : THashLibs;
+  ThisChar      : Char;
 
 
 Constructor TMinerThread.Create(CreateSuspended : boolean; const Thisnumber:integer);
@@ -118,14 +119,17 @@ End;
 
 Procedure ClearPoolsScreen();
 var
-  counter : integer;
+  counter  : integer;
+  PoolName : string;
 Begin
 For counter := 0 to length(ArrSources)-1 do
    begin
-   Gotoxy(3,12+(counter*2)); Write(Format('%0:-17s',[ArrSources[counter].ip]));
-   Gotoxy(62,12+(counter*2)); Write(Format('%6s',[ArrSources[counter].shares.ToString]));
-   Gotoxy(41,12+(counter*2)); Write(Format('%12s',[Int2Curr(ArrSources[counter].balance)]));
-   Gotoxy(56,12+(counter*2)); Write(Format('%3s',[IntToStr(ArrSources[counter].payinterval)]));
+   PoolName := Format('%0:-17s',[ArrSources[counter].ip]);
+   if length(PoolName)>16 then Setlength(PoolName,16);
+   Gotoxy(3,13+(counter)); Write(Format('%0:-17s',[PoolName]));
+   Gotoxy(62,13+(counter)); Write(Format('%6s',[ArrSources[counter].shares.ToString]));
+   Gotoxy(41,13+(counter)); Write(Format('%12s',[Int2Curr(ArrSources[counter].balance)]));
+   Gotoxy(56,13+(counter)); Write(Format('%3s',[IntToStr(ArrSources[counter].payinterval)]));
    end;
 U_ClearPoolsScreen := false;
 End;
@@ -160,7 +164,7 @@ End;
 
 procedure TMainThread.Execute;
 Begin
-While not terminated do
+While ((not terminated) or (FinishProgram)) do
    begin
    CheckLog;
    if SolutionsLength > 0 then
@@ -205,56 +209,6 @@ While not terminated do
    end;
 End;
 
-Procedure Updateheader();
-Begin
-Gotoxy(1,6);Write('==================================================================');
-Gotoxy(1,7);Write(format('| Address: %-39s | HashLib: %2s |',[myaddress,IntToStr(MyHashLib)]));
-Gotoxy(1,8);Write(Format('| Block: %8s | Age: %3s | CPUs: %2s / %2s | Speed: %10s |',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge),
-                IntToStr(MyCPUCount),IntToStr(MaxCPU),HashrateToShow(CurrSpeed)]));
-U_Headers := false;
-End;
-
-Procedure UpdateBlockAge();
-Begin
-GotoXy(55,8);Write(Format('%10s',[HashrateToShow(GetTotalHashes)]));
-GotoXy(26,8);Write(Format('%3s',[IntToStr(BlockAge)]));
-U_BlockAge := UTCTime;
-End;
-
-Procedure UpdateActivePool();
-var
-  counter : integer;
-Begin
-Textcolor(Green);
-TextBackGround(White);
-Gotoxy(3,12+(Activepool*2)); Write(Format('%0:-17s',[ArrSources[activepool].ip]));
-Gotoxy(62,12+(Activepool*2)); Write(Format('%6s',[ArrSources[activepool].shares.ToString]));
-Gotoxy(41,12+(Activepool*2)); Write(Format('%12s',[Int2Curr(ArrSources[activepool].balance)]));
-Gotoxy(56,12+(Activepool*2)); Write(Format('%3s',[IntToStr(ArrSources[activepool].payinterval)]));
-Textcolor(LightGray);
-TextBackGround(Black);
-U_ActivePool := false;
-End;
-
-Procedure PrintStatus(LText:String; LColor:integer);
-Begin
-Textcolor(LColor);
-Gotoxy(1,24);ClrEOL;
-Write(LText);
-Textcolor(LightGray);
-StatusMsg := '';
-End;
-
-Procedure UpdateNextBlockMessage();
-Begin
-Textcolor(Red);
-Gotoxy(1,22);ClrEOL;
-if WaitingNextBlock then
-   Write('Waiting next block');
-Textcolor(LightGray);
-U_WaitNextBlock := false;
-End;
-
 Procedure ColorMsg(x,y:integer;LTexto:String;TexCol,BacCol:Integer);
 Begin
 Textcolor(TexCol);
@@ -262,6 +216,90 @@ TextBackGround(BacCOl);
 GotoXy(x,y);write(LTexto);
 Textcolor(LightGray);
 TextBackGround(Black);
+End;
+
+Procedure Updateheader();
+Begin
+Gotoxy(1,6);Write('==================================================================');
+Gotoxy(1,7);Write(format('| Address: %-37s %15s |',[myaddress,Int2Curr(MyAddressBalance)]));
+Gotoxy(1,8);Write(Format('| Block: %8s | Age: %3s | CPUs: %2s / %2s | Speed: %10s |',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge),
+                IntToStr(MyCPUCount),IntToStr(MaxCPU),HashrateToShow(CurrSpeed)]));
+Gotoxy(1,9);Write(Format('| Uptime: %8s | Payments: %3s | Received: %12s | %2s |',[Uptime(MinerStartUTC),IntToStr(ReceivedPayments),Int2curr(ReceivedNoso),IntToStr(MyHashLib)]));
+if MyDonation>0 then ColorMsg(2,6,' '+MyDonation.ToString+' % ',black, green);
+U_Headers := false;
+End;
+
+Procedure UpdateBlockAge();
+Begin
+GotoXy(11,9);Write(Format('%8s',[Uptime(MinerStartUTC)]));
+GotoXy(55,8);Write(Format('%10s',[HashrateToShow(GetTotalHashes)]));
+GotoXy(26,8);Write(Format('%3s',[IntToStr(BlockAge)]));
+GotoXy(1,25);
+U_BlockAge := UTCTime;
+End;
+
+Procedure UpdateActivePool();
+var
+  counter  : integer;
+  PoolName : string;
+Begin
+Textcolor(white);
+TextBackGround(blue);
+PoolName := Format('%0:-17s',[ArrSources[activepool].ip]);
+if length(PoolName)>16 then Setlength(PoolName,16);
+Gotoxy(3,13+(Activepool)); Write(Format('%0:-17s',[PoolName]));
+Gotoxy(62,13+(Activepool)); Write(Format('%6s',[ArrSources[activepool].shares.ToString]));
+Gotoxy(41,13+(Activepool)); Write(Format('%12s',[Int2Curr(ArrSources[activepool].balance)]));
+Gotoxy(56,13+(Activepool)); Write(Format('%3s',[IntToStr(ArrSources[activepool].payinterval)]));
+Textcolor(LightGray);
+TextBackGround(Black);
+Gotoxy(23,13+(Activepool)); Write(Format('%6s',[IntToStr(ArrSources[activepool].miners)]));
+Gotoxy(32,13+(Activepool)); Write(Format('%6s',[FormatFloat('0.00',ArrSources[activepool].fee/100)]));
+U_ActivePool := false;
+End;
+
+Procedure PrintStatus(LText:String; LColor:integer);
+Begin
+Textcolor(LColor);
+Gotoxy(1,24);ClrEOL;
+if WaitingNextBlock then LText := '';
+Write(LText);
+Textcolor(LightGray);
+StatusMsg := '';
+End;
+
+Procedure UpdateTotalPending();
+Begin
+TextBackGround(Green);
+TextColor(white);
+Gotoxy(41,18); Write(Format('%12s',[Int2Curr(GetTotalPending)]));
+Textcolor(LightGray);
+TextBackGround(Black);
+U_TotalPending := false;
+end;
+
+Procedure UpdateNextBlockMessage();
+Begin
+Gotoxy(1,19);ClrEOL;
+Gotoxy(1,20);ClrEOL;
+Gotoxy(1,21);ClrEOL;
+Gotoxy(1,22);ClrEOL;
+Gotoxy(1,23);ClrEOL;
+TextBackGround(Red);
+TextColor(white);
+if WaitingNextBlock then
+   Begin
+   Gotoxy(26,19);Write(' __        __    _ _    ');
+   Gotoxy(26,20);Write(' \ \      / /_ _(_) |_  ');
+   Gotoxy(26,21);Write('  \ \ /\ / / _` | | __| ');
+   Gotoxy(26,22);Write('   \ V  V / (_| | | |_  ');
+   Gotoxy(26,22);Write('    \_/\_/ \__,_|_|\__| ');
+   Gotoxy(26,23);Write('                        ');
+   SetStatusmsg(' ',white);
+   end;
+Textcolor(LightGray);
+TextBackGround(Black);
+U_WaitNextBlock := false;
 End;
 
 Procedure Drawpools();
@@ -276,28 +314,47 @@ var
   ThisPAyInterval : string;
   ThisShares      : string;
 Begin
-Gotoxy(1,9);Write('=====================================================================');
-Gotoxy(1,10);Write(format('| %0:-17s | %6s | %6s | %12s | %3s | %6s |',['Pool','Miners','Fee','Balance','Pay','Shares']));
-Gotoxy(1,11);Write('---------------------------------------------------------------------');
+Gotoxy(1,10);Write('=====================================================================');
+Gotoxy(1,11);Write(format('| %0:-17s | %6s | %6s | %12s | %3s | %6s |',['Pool','Miners','Fee','Balance','Pay','Shares']));
+Gotoxy(1,12);Write('---------------------------------------------------------------------');
 for counter :=0 to length(ArrSources)-1 do
     begin
-    PoolName := Format('%0:-15s',[ArrSources[counter].ip]);
-    ThisPool :=GetPoolInfo(ArrSources[counter].ip,ArrSources[counter].port);
+    PoolName := Format('%0:-17s',[ArrSources[counter].ip]);
+    if length(PoolName)>16 then Setlength(PoolName,16);
+    ThisPool := GetPoolInfo(ArrSources[counter].ip,ArrSources[counter].port);
     ThisMiners := Parameter(ThisPool,0);
     thisrate := StrToInt64Def(Parameter(ThisPool,1),0);
     thisfee := StrToIntDef(Parameter(ThisPool,2),0);
     ThisBalance := Int2Curr(ArrSources[counter].balance);
     ThisPayInterval := IntToStr(ArrSources[counter].payinterval);
     ThisShares      := IntToStr(ArrSources[counter].Shares);
-    Gotoxy(1,12+(counter*2));Write(format('| %-17s | %6s | %6s | %12s | %3s | %6s |',[PoolName,ThisMiners,FormatFloat('0.00',ThisFee/100),ThisBalance,ThisPAyInterval,ThisShares]));
-    Gotoxy(1,13+(counter*2));Write('---------------------------------------------------------------------');
+    Gotoxy(1,13+(counter));Write(format('| %-17s | %6s | %6s | %12s | %3s | %6s |',[PoolName,ThisMiners,FormatFloat('0.00',ThisFee/100),ThisBalance,ThisPAyInterval,ThisShares]));
     Inc(DetectedPools)
     end;
+Gotoxy(1,13+DetectedPools);Write('---------------------------------------------------------------------');
 if DetectedPools = 0 then
    begin
    Gotoxy(1,12);
    Write('No pools listed');
    end;
+End;
+
+Procedure UpdateNewPayment();
+Begin
+TextBackGround(Green);
+TextColor(white);
+Gotoxy(37,6); Write(Format(' New payment: %12s ',[Int2Curr(U_NewPayment)]));
+Textcolor(LightGray);
+TextBackGround(Black);
+Gotoxy(32,9); Write(Format('%3s',[IntToStr(ReceivedPayments)]));
+Gotoxy(46,9); Write(Format('%12s',[Int2Curr(ReceivedNoso)]));
+U_NewPayment := 0;
+End;
+
+Procedure UpdateNosoBalance();
+Begin
+Gotoxy(50,7);Write(format('%15s',[Int2Curr(MyAddressBalance)]));
+U_AddressNosoBalance := false;
 End;
 
 Procedure RunTest();
@@ -358,14 +415,18 @@ Randomize();
 clrscr;
 if not FileExists('consominer2.cfg') then CreateConfig();
 if not FileExists('log.txt') then CreateLogFile();
+if not FileExists('payments.dat') then CreatePaymentsFile();
+if not FileExists('payments.txt') then CreateRAWPaymentsFile();
 MaxCPU:= {$IFDEF UNIX}GetSystemThreadCount{$ELSE}GetCPUCount{$ENDIF};
 LoadConfig();
+CreateConfig();
 LoadSources();
+LoadPreviousPayments;
 Textcolor(white);
-Writeln('    _____                         _                ___');
-Writeln('   / ___/__  ___  ___ ___  __ _  (_)__  ___ ____  |_  |');
-Writeln('  / /__/ _ \/ _ \(_-</ _ \/    \/ / _ \/ -_) __/ / __/ ');
-Writeln('  \___/\___/_//_/___/\___/_/_/_/_/_//_/\__/_/   /____ ');
+Writeln('    _____                         _');
+Writeln('   / ___/__  ___  ___ ___  __ _  (_)__  ___ ____');
+Writeln('  / /__/ _ \/ _ \(_-</ _ \/    \/ / _ \/ -_) __/');
+Writeln('  \___/\___/_//_/___/\___/_/_/_/_/_//_/\__/_/');
 WriteLn();
 Textcolor(green);
 gotoxy(52,1);writeln('___');
@@ -381,11 +442,13 @@ if MyRunTest then
    readln();
    exit;
    end;
+MinerStartUTC := UTCTime;
 if Myhashlib = 65 then CurrHashLib := hl65
 else if Myhashlib = 68 then CurrHashLib := hl68
 else if Myhashlib = 69 then CurrHashLib := hl69
 else CurrHashLib := hl70;
 Updateheader;
+ColorMsg(1,25,' Alt+X for exit ',Black,LightGray);
 Drawpools;
 SetStatusMsg('Consominer2 started!', green);
 ActivePool := RandonStartPool;
@@ -394,14 +457,33 @@ MainThread := TMainThread.Create(true);
 MainThread.FreeOnTerminate:=true;
 MainThread.Start;
 Repeat
+   Repeat
    if StatusMsg <> '' then PrintStatus(StatusMsg,StatusColor);
    if U_Headers then UpdateHeader;
    if U_ActivePool then UpdateActivePool;
-   if U_BlockAge <> UTCtime then UpdateBlockAge;
    if U_ClearPoolsScreen then ClearPoolsScreen;
    if U_WaitNextBlock then UpdateNextBlockMessage;
+   if U_AddressNosoBalance then UpdateNosoBalance;
+   if U_TotalPending then UpdateTotalPEnding;
+   if U_NewPayment>0 then UpdateNewPayment;
+   if U_BlockAge <> UTCtime then UpdateBlockAge;
    Sleep(1);
+   until KeyPressed;
+   ThisChar := Readkey;
+   if ThisChar = #0 then
+      begin
+      ThisChar:=Readkey;
+      if ThisChar=#45 then // alt+x
+         begin
+         FinishMiners := true;
+         FinishProgram := true;
+         Repeat
+            sleep(1);
+         until GetOMTValue = 0;
+         end
+      end;
 until FinishProgram;
-
+clrscr;
+Writeln('Consominer2 closed!');
 END.
 

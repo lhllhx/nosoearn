@@ -1,3 +1,16 @@
-v1.2
+v1.3
 
-- First stable release.
+- Default address changed to project funds address.
+- Commented default CFG file.
+- Screen output redesigned.
+- Implemented donations system.
+- Added address balance.
+- Added session uptime.
+- Added payments tracking system.
+- Added TXT file for payments history.
+- Added on pools balance total.
+- Improved status message reports.
+- Added wait message for block change.
+- Implemented key shortcut ALt+X to close the miner.
+
+

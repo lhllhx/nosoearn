@@ -9,7 +9,7 @@ uses
 
 Type
 
-   TSourcesData= packed record
+   TSourcesData = packed record
      ip         : string;
      port       : integer;
      Shares     : integer;
@@ -17,6 +17,16 @@ Type
      balance    : int64;
      payinterval: integer;
      FailedTrys : integer;
+     miners     : integer;
+     fee        : integer;
+     LastPay    : string;
+     end;
+
+   TPayment = packed record
+     Pool     : string[30];
+     block    : integer;
+     ammount  : int64;
+     OrderID  : string[60];
      end;
 
    TSolution = Packed record
@@ -25,12 +35,6 @@ Type
      Diff   : string;
      end;
 
-   {Pool payment info}
-   TPayment = packed record
-     block    : integer;
-     ammount  : int64;
-     OrderID  : string[60];
-   end;
 
 Procedure LoadSources();
 Function GetPoolInfo(PoolIp:String;PoolPort:integer):String;
@@ -40,6 +44,7 @@ Function RandonStartPool():integer;
 Function AllFilled():Boolean;
 Procedure FillAllPools();
 Procedure ClearAllPools();
+Function GetTotalPending():Int64;
 Procedure SaveSource(LSource:TSourcesData);
 Procedure SetStatusMsg(Lmessage:string;Lcolor:integer);
 // Disk access
@@ -50,6 +55,12 @@ Function CheckSource():integer;
 Procedure CreateLogFile();
 Procedure Tolog(LLine:String);
 Procedure CheckLog();
+// Payments
+Procedure CreatePaymentsFile();
+Procedure CreateRAWPaymentsFile();
+Function GetPoolLastPay(PoolName:String):String;
+Procedure LoadPreviousPayments();
+Procedure AddNewPayment(LData:Tpayment);
 
 //*************
 Procedure AddSolution(Data:TSolution);
@@ -64,12 +75,13 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer = '1.2';
+  AppVer = '1.3';
   HasheableChars = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
+  DeveloperAddress = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
 
 var
   ArrSources    : Array of TSourcesData;
-  SourcesStr    : string = 'nosofish.xyz:8082 20.199.50.27:8082 144.24.45.44:8082 159.196.1.198:8082 pool.rukzuk.xyz:8082';
+  SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082 pool.rukzuk.xyz:8082';
   ArrLogLines   : array of string;
   FinishProgram : boolean = false;
   MAXCPU        : integer = 0;
@@ -81,15 +93,23 @@ var
   StatusColor   : integer;
   TimeOffSet    : integer = 0;
   // Files vars
-  FileConfig    : Textfile;
-  FileLog       : Textfile;
+  FileConfig      : Textfile;
+  FileLog         : Textfile;
+  FilePayments    : file of TPayment;
+  FileRAWPayments : Textfile;
   // USer config
-  MyAddress            : string;
-  MyCPUCount,MyHAshlib : integer;
-  MyRunTest            : boolean  = false;
-  MyMaxShares          : integer = 5;
+  MyAddress            : string = 'NpryectdevepmentfundsGE';
+  MyCPUCount           : integer = 1;
+  MyHAshlib            : integer = 70;
+  MyRunTest            : boolean  = True;
+  MyMaxShares          : integer = 0;
+  MyDonation           : integer = 5;
   // Miner Variables
+  MyAddressBalance      : int64 = 0;
   ArrHashLibs           : array[0..3] of integer;
+  MinerStartUTC         : int64 = 0;
+  ReceivedPayments      : integer = 0;
+  ReceivedNOSO          : int64 = 0;
   MAINPREFIX            : string = '';
   MinimunTargetDiff     : string = '00000';
   TargetHash            : string = '00000000000000000000000000000000';
@@ -104,11 +124,15 @@ var
     BlockCompleted      : boolean = false;
     WrongThisPool       : Integer = 0;
   // Update screen
-  U_Headers          : boolean = false;
-  U_BlockAge         : int64 = 0;
-  U_ActivePool       : boolean = false;
-  U_ClearPoolsScreen : boolean = false;
-  U_WaitNextBlock    : boolean = false;
+  U_Headers            : boolean = false;
+  U_BlockAge           : int64 = 0;
+  U_ActivePool         : boolean = false;
+  U_ClearPoolsScreen   : boolean = false;
+  U_WaitNextBlock      : boolean = false;
+  U_AddressNosoBalance : boolean = false;
+  U_TotalPending       : boolean = false;
+  U_NewPayment         : int64 = 0;
+
   // Crititical sections
   CS_Log          : TRTLCriticalSection;
   CS_ArrSources   : TRTLCriticalSection;
@@ -117,8 +141,6 @@ var
   CS_MinerThreads : TRTLCriticalSection;
 
 implementation
-
-
 
 Function GetPoolInfo(PoolIp:String;PoolPort:integer):String;
 var
@@ -176,12 +198,16 @@ End;
 
 Procedure SendPoolShare(Data:TSolution);
 var
-  TCPClient  : TidTCPClient;
-  IpandPor   : String = '';
-  ResultLine : String = '';
-  Trys       : integer = 0;
-  Success    : boolean;
+  TCPClient     : TidTCPClient;
+  IpandPor      : String = '';
+  ResultLine    : String = '';
+  Trys          : integer = 0;
+  Success       : boolean;
+  CreditAddress : String = '';
 Begin
+Randomize;
+if ( (MyDonation>0) and ((Random(100)+1)<=MyDonation) ) then
+   CreditAddress := DeveloperAddress;
 ResultLine := '';
 TCPClient := TidTCPClient.Create(nil);
 TCPclient.Host:=ArrSources[ActivePool].ip;
@@ -193,7 +219,7 @@ Success := false;
 Inc(Trys);
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2'+AppVer+' '+CurrentBlock.ToString+' '+Data.target);
+TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2v'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress);
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 Success := true;
@@ -223,13 +249,14 @@ if Success then
    else
       begin
       SetStatusMsg('Rejected share : '+ResultLine,4{red});
+      Inc(WrongThisPool);
       // Filter here if Shares limit was reached
-      If AnsiContainsStr(ResultLine,'SHARES_LIMIT') then
+      If ((AnsiContainsStr(ResultLine,'SHARES_LIMIT')) or ( WrongThisPool = 3)) then
          begin
          ClearSolutions();
          Sleep(10);
          FinishMiners := true;
-         ArrSources[ActivePool].filled:=true;
+         if AnsiContainsStr(ResultLine,'SHARES_LIMIT') then ArrSources[ActivePool].filled:=true;
          end;
       end;
    end
@@ -268,6 +295,9 @@ Repeat
       ArrSources[length(ArrSources)-1].balance:=0;
       ArrSources[length(ArrSources)-1].payinterval:=0;
       ArrSources[length(ArrSources)-1].FailedTrys:=0;
+      ArrSources[length(ArrSources)-1].Miners:=0;
+      ArrSources[length(ArrSources)-1].Fee:=0;
+      ArrSources[length(ArrSources)-1].LastPay:=GetPoolLastPay(Parameter(ThisSource,0));
       end;
    Inc(Counter);
    end;
@@ -316,8 +346,20 @@ For counter := 0 to length(ArrSources)-1 do
    ArrSources[counter].filled     := false;
    ArrSources[counter].Shares     := 0;
    ArrSources[counter].FailedTrys := 0;
-
+   ArrSources[counter].Miners     := 0;
+   ArrSources[counter].Fee        := 0;
    end;
+LeaveCriticalSection(CS_ArrSources);
+End;
+
+Function GetTotalPending():Int64;
+var
+  counter : integer;
+Begin
+Result := 0;
+EnterCriticalSection(CS_ArrSources);
+For counter := 0 to length(ArrSources)-1 do
+   Inc(Result,ArrSources[counter].balance);
 LeaveCriticalSection(CS_ArrSources);
 End;
 
@@ -347,11 +389,18 @@ Procedure CreateConfig();
 Begin
 TRY
 rewrite(FileConfig);
-writeln(FileConfig,'address N2kFAtGWLb57Qz91sexZSAnYwA3T7Cy');
-writeln(FileConfig,'cpu 1');
-writeln(FileConfig,'hashlib 70');
-writeln(FileConfig,'test True');
-writeln(FileConfig,'maxshares 0');
+writeln(FileConfig,'** Replace the default mining address with your own address. Aliases not allowed.');
+writeln(FileConfig,'address '+MyAddress);
+writeln(FileConfig,'** Set the number of CPUs/Threads you want use to mine.');
+writeln(FileConfig,'cpu '+MyCPUCount.ToString);
+writeln(FileConfig,'** Valid values: 65,68,69 and 70 (default).');
+writeln(FileConfig,'hashlib '+MyHashLib.ToString);
+writeln(FileConfig,'** Change to false to start mining when you launch the app.');
+writeln(FileConfig,'test '+BoolToStr(MyRunTest,true));
+writeln(FileConfig,'** Max number of shares to be submitted to each pool. Use 0 to use pool defined.');
+writeln(FileConfig,'maxshares '+MyMaxShares.ToString);
+writeln(FileConfig,'** Enter a valid number between 0-99 as your % volunteer donation for developer.');
+writeln(FileConfig,'donate '+MyDonation.ToString);
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do
    begin
@@ -374,6 +423,7 @@ while not eof(FileConfig) do
    if uppercase(Parameter(linea,0)) = 'TEST' then MyRunTest := StrToBoolDef(Parameter(linea,1),false);
    if uppercase(Parameter(linea,0)) = 'MAXSHARES' then MyMaxShares := StrToIntDef(Parameter(linea,1),9999);
    if MyMaxShares < 1 then MyMaxShares := 9999;
+   if uppercase(Parameter(linea,0)) = 'DONATE' then MyDonation := StrToIntDef(Parameter(linea,1),5);
    end;
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do
@@ -391,6 +441,7 @@ var
   PoolString : String ='';
   PoolPayStr : string = '';
   PoolPayData : TPayment;
+  SourceNoso   : Int64;
 Begin
 Result := 0;
 Repeat
@@ -410,19 +461,31 @@ if PoolString<> 'ERROR' then // Pool reached
    CurrentBlock           := StrToIntDef(Parameter(PoolString,5),0);
    ThisSource.balance     := StrToInt64Def(Parameter(PoolString,6),0);
    ThisSource.payinterval := StrToIntDef(Parameter(PoolString,7),0);
-   //PoolPayStr     := Parameter(PoolString,8);
-   //PoolPayStr  := StringReplace(PoolPayStr,':',' ',[rfReplaceAll, rfIgnoreCase]);
-   //PoolPayData.block:=StrToIntDef(Parameter(PoolPayStr,0),0);
-   //PoolPayData.OrderID:=Parameter(PoolPayStr,2);
-   {
-   if ((PoolPayData.OrderID <> PoolLastPayment.OrderID) and (PoolPayData.ammount>0)) then
+   PoolPayStr          := Parameter(PoolString,8);
+   PoolPayStr          := StringReplace(PoolPayStr,':',' ',[rfReplaceAll, rfIgnoreCase]);
+   PoolPayData.Pool    := ThisSource.ip;
+   PoolPayData.block   := StrToIntDef(Parameter(PoolPayStr,0),0);
+   PoolPayData.ammount := StrToInt64Def(Parameter(PoolPayStr,1),0);
+   PoolPayData.OrderID := Parameter(PoolPayStr,2);
+
+   if ((PoolPayData.OrderID <> GetPoolLastPay(ThisSource.ip)) and (PoolPayData.ammount>0)) then
       begin
-      PoolLastPayment := PoolPayData;
-      InsertNewPayment(PoolLastPayment);
-      Writeln('*** NEW POOL PAYMENT ***');
-      ToLog(Format('%s -> %s',[Int2Curr(PoolPayData.ammount),PoolPayData.OrderID]));
+      AddNewPayment(PoolPayData);
+      Inc(ReceivedPayments);
+      Inc(ReceivedNoso,PoolPayData.ammount);
+      U_NewPayment := PoolPayData.ammount;
       end;
-   }
+
+   ThisSource.miners      := StrToIntDef(Parameter(PoolString,13),0);
+   ThisSource.fee         := StrToIntDef(Parameter(PoolString,14),0);
+   SourceNoso             := StrToInt64Def(Parameter(PoolString,15),-1);
+   If SourceNoso>-1 then
+      Begin
+      MyAddressBalance := SourceNoso;
+      U_AddressNosoBalance := true;
+      end;
+   U_TotalPEnding := true;
+
    TimeOffSet := UTCTime-StrToInt64Def(Parameter(PoolString,12),UTCTime);
    SaveSource(ThisSource);
    SetStatusMsg('Synced with pool '+ThisSource.ip,2{green});
@@ -438,6 +501,102 @@ else
       end
    else SetStatusMsg(format('Failed connecting to %s (%d)',[ThisSource.ip,ArrSources[ActivePool].FailedTrys]),4{red});
    end;
+End;
+
+Procedure CreatePaymentsFile();
+Begin
+TRY
+   rewrite(FilePayments);
+   CloseFile(FilePayments);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+End;
+
+Procedure CreateRAWPaymentsFile();
+var
+  FirstLine : string;
+Begin
+TRY
+   rewrite(FileRAWPayments);
+   FirstLine := (Format(' %-17s | %10s | %12s | %-60s |',['Pool','Block','Amount','OrderID']));
+   WriteLn(FileRAWPayments,FirstLine);
+   CloseFile(FileRAWPayments);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+
+End;
+
+Function GetPoolLastPay(PoolName:String):String;
+var
+  Counter  : integer;
+  ThisData : TPayment;
+Begin
+Result := '';
+TRY
+   reset(FilePayments);
+   For counter := Filesize(FilePayments)-1 downto 0 do
+      begin
+      Seek(FilePayments,counter);Read(FilePayments,ThisData);
+      if ThisData.Pool=PoolName then
+         begin
+         Result := ThisData.OrderID;
+         break;
+         end;
+      end;
+   CloseFile(FilePayments);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+End;
+
+Procedure LoadPreviousPayments();
+var
+  Counter  : integer;
+  ThisData : TPayment;
+Begin
+TRY
+   reset(FilePayments);
+   For counter := Filesize(FilePayments)-1 downto 0 do
+      begin
+      Seek(FilePayments,counter);Read(FilePayments,ThisData);
+      Inc(ReceivedPayments);
+      Inc(ReceivedNoso,ThisData.ammount);
+      end;
+   CloseFile(FilePayments);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+End;
+
+Procedure AddNewPayment(LData:Tpayment);
+var
+  RawLine : String;
+Begin
+TRY
+   reset(FilePayments);
+   Seek(FilePayments,FileSize(FilePayments));
+   Write(FilePayments,Ldata);
+   CloseFile(FilePayments);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+TRY
+   Append(FileRAWPayments);
+   if Length(LData.Pool)>16 then SetLength(Ldata.Pool,16);
+   RawLine := (Format(' %-17s | %10s | %12s | %-60s |',[LData.pool,IntToStr(LData.block),Int2Curr(LData.ammount),LData.OrderID]));
+   WriteLn(FileRAWPayments,RawLine);
+   CloseFile(FileRAWPayments);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
 End;
 
 Procedure CreateLogFile();
@@ -558,6 +717,10 @@ End;
 INITIALIZATION
 Assignfile(FileConfig, 'consominer2.cfg');
 Assignfile(FileLog, 'log.txt');
+Assignfile(FilePayments, 'payments.dat');
+Assignfile(FileRAWPayments, 'payments.txt');
+
+
 ArrHashLibs[0]:=65;ArrHashLibs[1]:=68;ArrHashLibs[2]:=69;ArrHashLibs[3]:=70;
 InitCriticalSection(CS_Log);
 InitCriticalSection(CS_ArrSources);

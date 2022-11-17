@@ -5,6 +5,8 @@ consominer2
 consominer2.cfg
 consominer2.exe
 consominer2.dbg
+payments.dat
+payments.txt
 gitinst.txt
 data.txt
 log.txt

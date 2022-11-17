@@ -15,6 +15,7 @@ Function BlockAge():integer;
 Function HashrateToShow(speed:int64):String;
 Function Parameter(LineText:String;ParamNumber:int64):String;
 function Int2Curr(Value: int64): string;
+Function UpTime(FromTime:Int64):string;
 
 IMPLEMENTATION
 
@@ -190,6 +191,22 @@ result :=  AddChar('0',Result, 9);
 Insert('.',Result, Length(Result)-7);
 If Value <0 THen Result := '-'+Result;
 end;
+
+Function UpTime(FromTime:Int64):string;
+var
+  TotalSeconds,days,hours,minutes,seconds, remain : integer;
+Begin
+Totalseconds := UTCTime-FromTime;
+Days := Totalseconds div 86400;
+remain := Totalseconds mod 86400;
+hours := remain div 3600;
+remain := remain mod 3600;
+minutes := remain div 60;
+remain := remain mod 60;
+seconds := remain;
+if Days > 0 then Result:= Format('%dd %.2d:%.2d:%.2d', [Days, Hours, Minutes, Seconds])
+else Result:= Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+End;
 
 END.
 
