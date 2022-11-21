@@ -164,7 +164,7 @@ End;
 
 procedure TMainThread.Execute;
 Begin
-While ((not terminated) or (FinishProgram)) do
+While not FinishProgram do
    begin
    CheckLog;
    if SolutionsLength > 0 then
@@ -207,6 +207,7 @@ While ((not terminated) or (FinishProgram)) do
       end;
    sleep(10);
    end;
+MAinThreadIsFinished := true;
 End;
 
 Procedure XYMsg(x,y:integer;LTexto:String;TexCol:integer=7;BacCol:Integer=0);
@@ -479,11 +480,17 @@ Repeat
          FinishProgram := true;
          Repeat
             sleep(1);
-         until GetOMTValue = 0;
+         until(GetOMTValue = 0);
          end
       end;
 until FinishProgram;
 clrscr;
-Writeln('Consominer2 closed!');
+Writeln('Consominer2 miners threads closed');
+Writeln('Closing MainThread...');
+Repeat
+   sleep(1);
+until(MAinThreadIsFinished);
+sleep(100);
+Writeln('Done. Bye!');
 END.
 

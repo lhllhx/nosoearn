@@ -81,6 +81,7 @@ Const
 
 var
   ArrSources    : Array of TSourcesData;
+  MAinThreadIsFinished : boolean = false;
   SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082 pool.rukzuk.xyz:8082';
   ArrLogLines   : array of string;
   FinishProgram : boolean = false;
