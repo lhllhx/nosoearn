@@ -2,6 +2,7 @@
 [![Build Status](https://github.com/Noso-Project/consominer2/workflows/build/badge.svg?branch=main)](https://github.com/Noso-Project/consominer2/actions)
 [![Supports Windows](https://img.shields.io/badge/support-Windows-blue?logo=Windows)](https://github.com/Noso-Project/consominer2/releases/latest)
 [![Supprts Linux](https://img.shields.io/badge/support-Linux-yellow?logo=Linux)](https://github.com/Noso-Project/consominer2/releases/latest)
+[![Supports macOS](https://img.shields.io/badge/support-macOS-black?logo=macOS)](https://github.com/gcarreno/NosoData/releases/latest)
 [![License](https://img.shields.io/github/license/Noso-Project/consominer2)](https://github.com/Noso-Project/consominer2/blob/main/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/Noso-Project/consominer2?label=latest%20release)](https://github.com/Noso-Project/consominer2/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Noso-Project/consominer2/total)](https://github.com/Noso-Project/consominer2/releases)
