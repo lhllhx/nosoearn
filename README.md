@@ -41,5 +41,7 @@ The Linux version has been tested on:
 
 ## Donations
 
-NosoCoin: NpryectdevepmentfundsGE
+Donate to project sending Noso to the address:
+
+### NpryectdevepmentfundsGE
 

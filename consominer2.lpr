@@ -209,7 +209,7 @@ While ((not terminated) or (FinishProgram)) do
    end;
 End;
 
-Procedure ColorMsg(x,y:integer;LTexto:String;TexCol,BacCol:Integer);
+Procedure XYMsg(x,y:integer;LTexto:String;TexCol:integer=7;BacCol:Integer=0);
 Begin
 Textcolor(TexCol);
 TextBackGround(BacCOl);
@@ -225,7 +225,7 @@ Gotoxy(1,7);Write(format('| Address: %-37s %15s |',[myaddress,Int2Curr(MyAddress
 Gotoxy(1,8);Write(Format('| Block: %8s | Age: %3s | CPUs: %2s / %2s | Speed: %10s |',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge),
                 IntToStr(MyCPUCount),IntToStr(MaxCPU),HashrateToShow(CurrSpeed)]));
 Gotoxy(1,9);Write(Format('| Uptime: %8s | Payments: %3s | Received: %12s | %2s |',[Uptime(MinerStartUTC),IntToStr(ReceivedPayments),Int2curr(ReceivedNoso),IntToStr(MyHashLib)]));
-if MyDonation>0 then ColorMsg(2,6,' '+MyDonation.ToString+' % ',black, green);
+if MyDonation>0 then XYMsg(2,6,' '+MyDonation.ToString+' % ',black, green);
 U_Headers := false;
 End;
 
@@ -272,7 +272,7 @@ Procedure UpdateTotalPending();
 Begin
 TextBackGround(Green);
 TextColor(white);
-Gotoxy(41,18); Write(Format('%12s',[Int2Curr(GetTotalPending)]));
+Gotoxy(41,13+length(ArrSources)); Write(Format('%12s',[Int2Curr(GetTotalPending)]));
 Textcolor(LightGray);
 TextBackGround(Black);
 U_TotalPending := false;
@@ -366,7 +366,7 @@ var
   CPUSpeed     : extended;
   ShowResult   : String;
 Begin
-ColorMsg(1,6,' Consominer2 tests',yellow,black);
+XYMsg(1,6,' Consominer2 tests',yellow,black);
 writeln('');
 Writeln('------------------------------------------------------------');
 Writeln(Format('| CPUs  | Hashlib65  | Hashlib68  | Hashlib69  | Hashlib70  |',[]));
@@ -381,7 +381,7 @@ For CPUsToUse := 1 to maxCPU do
       if LibToUse = 2 then CurrHashLib := hl69;
       if LibToUse = 3 then CurrHashLib := hl70;
       ShowResult := Format('%10s',['Running ']);
-      ColorMsg(11+(LibToUse*13),Wherey,ShowResult,black,red);
+      XYMsg(11+(LibToUse*13),Wherey,ShowResult,black,red);
       TestStart := GetTickCount64;
       FinishMiners := false;
       SetOMT(CPUsToUse);
@@ -399,7 +399,7 @@ For CPUsToUse := 1 to maxCPU do
       TestTime := (TestEnd-TestStart);
       CPUSpeed := HashesForTest/(testtime/1000);
       ShowResult := Format('%11s',[FormatFloat('0.00',CPUSpeed*CPUsToUse)]);
-      ColorMsg(11+(LibToUse*13),Wherey,ShowResult,green,black);
+      XYmsg(11+(LibToUse*13),Wherey,ShowResult,green,black);
       end;
    writeLn();
    end;
@@ -434,8 +434,8 @@ gotoxy(51,2);writeln('|_  |');
 gotoxy(50,3);writeln('/ __/');
 gotoxy(49,4);writeln('/____');
 Textcolor(LightGray);
-ColorMsg(57,3,'V'+Appver,yellow,black);
-ColorMsg(57,4,'PoPW',red,black);
+XYMsg(57,3,'V'+Appver,yellow,black);
+XYMsg(57,4,'PoPW',red,black);
 if MyRunTest then
    begin
    RunTest();
@@ -448,7 +448,7 @@ else if Myhashlib = 68 then CurrHashLib := hl68
 else if Myhashlib = 69 then CurrHashLib := hl69
 else CurrHashLib := hl70;
 Updateheader;
-ColorMsg(1,25,' Alt+X for exit ',Black,LightGray);
+XYMsg(1,25,' Alt+X for exit ',Black,LightGray);
 Drawpools;
 SetStatusMsg('Consominer2 started!', green);
 ActivePool := RandonStartPool;
