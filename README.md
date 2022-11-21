@@ -1,5 +1,5 @@
 # consominer2
-[![Build Status](https://github.com/Noso-Project/consominer2/workflows/build/badge.svg?branch=main)](https://github.com/Noso-Project/consominer2/actions)
+[![Build Status](https://github.com/Noso-Project/consominer2/workflows/main/badge.svg?branch=main)](https://github.com/Noso-Project/consominer2/actions)
 [![Supports Windows](https://img.shields.io/badge/support-Windows-blue?logo=Windows)](https://github.com/Noso-Project/consominer2/releases/latest)
 [![Supprts Linux](https://img.shields.io/badge/support-Linux-yellow?logo=Linux)](https://github.com/Noso-Project/consominer2/releases/latest)
 [![Supports macOS](https://img.shields.io/badge/support-macOS-black?logo=macOS)](https://github.com/gcarreno/NosoData/releases/latest)
