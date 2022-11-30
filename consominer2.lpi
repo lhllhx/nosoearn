@@ -13,7 +13,6 @@
       <Title Value="consominer2"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
-      <Icon Value="0"/>
     </General>
     <BuildModes>
       <Item Name="Default" Default="True"/>
@@ -31,7 +30,7 @@
           <CodeGeneration>
             <SmartLinkUnit Value="True"/>
             <Optimizations>
-              <OptimizationLevel Value="4"/>
+              <OptimizationLevel Value="3"/>
             </Optimizations>
           </CodeGeneration>
           <Linking>
@@ -107,6 +106,11 @@
       <Unit>
         <Filename Value="releasenotes.txt"/>
         <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="noso_tui.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Noso_TUI"/>
       </Unit>
     </Units>
   </ProjectOptions>

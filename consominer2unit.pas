@@ -75,14 +75,14 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer = '1.3';
+  AppVer = '1.4';
   HasheableChars = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
 
 var
   ArrSources    : Array of TSourcesData;
   MAinThreadIsFinished : boolean = false;
-  SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082 pool.rukzuk.xyz:8082';
+  SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082';
   ArrLogLines   : array of string;
   FinishProgram : boolean = false;
   MAXCPU        : integer = 0;
