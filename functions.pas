@@ -204,7 +204,7 @@ remain := remain mod 3600;
 minutes := remain div 60;
 remain := remain mod 60;
 seconds := remain;
-if Days > 0 then Result:= Format('%dd %.2d:%.2d:%.2d', [Days, Hours, Minutes, Seconds])
+if Days > 0 then Result:= Format('%.2dd%.2dh%.2d', [Days, Hours, Minutes])
 else Result:= Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
 End;
 
