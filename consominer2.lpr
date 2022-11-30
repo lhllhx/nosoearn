@@ -374,9 +374,134 @@ Gotoxy(50,7);Write(format('%15s',[Int2Curr(MyAddressBalance)]));
 U_AddressNosoBalance := false;
 End;
 
-Procedure RunConfig;
-Begin
+Function RunConfig:integer;
+var
+  ExitCode  : integer;
+  IsDone    : boolean = false;
+  ActiveRow : integer = 9;
+  GetEdit   : TEditData;
+  NavKey    : integer;
 
+   procedure showData();
+   Begin
+   DLabel(22,9,MyAddress,38,AlLeft,lightgray,black);
+   DLabel(22,10,MyCPUCount.ToString,38,AlLeft,lightgray,black);
+   DLabel(22,11,MyHAshlib.ToString,38,AlLeft,lightgray,black);
+   DLabel(22,12,MyMaxShares.ToString,38,AlLeft,lightgray,black);
+   DLabel(22,13,MyDonation.ToString,38,AlLeft,lightgray,black);
+   Dlabel(2,15,'Save & Run',17,alCenter,black,brown);
+   Dlabel(22,15,'Save & Exit',17,alCenter,black,brown);
+   Dlabel(42,15,'Exit',17,alCenter,black,brown);
+   End;
+
+Begin
+Result := 0;
+BKColor(black);
+cls(1,7,80,25);
+DWindow(1,8,60,14,'',white,black);
+VertLine(20,8,14,white,black,true);
+TextOut(3,9,'Noso address',yellow,black);
+TextOut(3,10,Format('CPUs [%d]',[MaxCPU]),yellow,black);
+TextOut(3,11,'Hashlib',yellow,black);
+TextOut(3,12,'Block shares',yellow,black);
+TextOut(3,13,'Donate %',yellow,black);
+showData;
+ClrLine(25);
+DLabel(1,25,#24' '#25' Navigate',15,AlCenter,white,green);
+DLabel(17,25,'ENTER Select',15,AlCenter,white,green);
+Repeat
+   If ActiveRow > 16 then ActiveRow := 9;
+   If ActiveRow < 9 then ActiveRow := 16;
+   if ActiveRow=9 then
+      begin
+      GetEdit := ReadEditScreen(22,ActiveRow,MyAddress,38);
+      if GetEdit.OutKey = 80 then Inc(ActiveRow);
+      if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      MyAddress := GetEdit.OutString;
+      showData;
+      end
+   else if ActiveRow = 10 then
+      begin
+      GetEdit := ReadEditScreen(22,ActiveRow,MyCPUCount.ToString,38);
+      if GetEdit.OutKey = 80 then Inc(ActiveRow);
+      if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      MyCPUCount := StrToIntDef(GetEdit.OutString,MyCPUCount);
+      showData;
+      end
+   else if ActiveRow = 11 then
+      begin
+      GetEdit := ReadEditScreen(22,ActiveRow,MyHAshlib.ToString,38);
+      if GetEdit.OutKey = 80 then Inc(ActiveRow);
+      if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      MyHAshlib := StrToIntDef(GetEdit.OutString,MyHAshlib);
+      showData;
+      end
+   else if ActiveRow = 12 then
+      begin
+      GetEdit := ReadEditScreen(22,ActiveRow,MyMaxShares.ToString,38);
+      if GetEdit.OutKey = 80 then Inc(ActiveRow);
+      if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      MyMaxShares := StrToIntDef(GetEdit.OutString,MyMaxShares);
+      showData;
+      end
+   else if ActiveRow = 13 then
+      begin
+      GetEdit := ReadEditScreen(22,ActiveRow,MyDonation.ToString,38);
+      if GetEdit.OutKey = 80 then Inc(ActiveRow);
+      if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      MyDonation := StrToIntDef(GetEdit.OutString,MyDonation);
+      showData;
+      end
+   else if ActiveRow = 14 then
+      begin
+      Dlabel(2,15,'Save & Run',17,alCenter,white,Green);
+      GotoXy(2,15);
+      NavKey := ReadNavigationKey;
+      if Navkey = 77 then ActiveRow := 15;
+      if Navkey = 72 then ActiveRow := 13;
+      if Navkey = 80 then ActiveRow := 9;
+      if navkey = 13 then
+         begin
+         MyRunTest := false;
+         Createconfig();
+         result:=1;
+         IsDone := true;
+         end;
+      ShowData;
+      end
+   else if ActiveRow = 15 then
+      begin
+      Dlabel(22,15,'Save & Exit',17,alCenter,white,green);
+      GotoXy(22,15);
+      NavKey := ReadNavigationKey;
+      if Navkey = 77 then ActiveRow := 16;
+      if Navkey = 75 then ActiveRow := 14;
+      if Navkey = 72 then ActiveRow := 13;
+      if Navkey = 80 then ActiveRow := 9;
+      if navkey = 13 then
+         begin
+         Createconfig();
+         result:=2;
+         IsDone := true;
+         end;
+      ShowData;
+      end
+   else if ActiveRow = 16 then
+      begin
+      Dlabel(42,15,'Exit',17,alCenter,white,green);
+      GotoXy(42,15);
+      NavKey := ReadNavigationKey;
+      if Navkey = 75 then ActiveRow := 15;
+      if Navkey = 72 then ActiveRow := 13;
+      if Navkey = 80 then ActiveRow := 9;
+      if navkey = 13 then
+         begin
+         result:=3;
+         IsDone := true;
+         end;
+      ShowData;
+      end;
+until IsDone ;
 End;
 
 Function RunTest():boolean;
@@ -389,62 +514,79 @@ var
   ShowResult   : String;
   ExitCode     : integer;
 Begin
-DLabel(1,6,'Consominer2 tests',60,AlCenter,yellow,Green);
-DWindow(1,8,61,10,'',white,black);
-//Writeln('------------------------------------------------------------');
-//Writeln(Format('| CPUs  | Hashlib65  | Hashlib68  | Hashlib69  | Hashlib70  |',[]));
-//Writeln('-------------------------------------------------------------');
-DLabel(2,9,Format(' CPUs  | Hashlib65  | Hashlib68  | Hashlib69  | Hashlib70',[]),59,AlLeft,yellow,black);
-TextOut(1,10,LChar[10],white,black);
-TextOut(61,10,LChar[6],white,black);
-For CPUsToUse := 1 to maxCPU do
-   begin
-   //Write(Format('| %2s    |            |            |            |            |',[IntToStr(CPUsToUse)]));
-   Dlabel(1,10+CPUsToUse,Format(LChar[5]+' %2s    '+LChar[5]+'            '+LChar[5]+'            '+LChar[5]+'            '+LChar[5]+'            '+LChar[5],[IntToStr(CPUsToUse)]),61,AlLEft,lightGray,black);
-   for LibToUse := 0 to 3 do
-      begin
-      if LibToUse = 0 then CurrHashLib := hl65;
-      if LibToUse = 1 then CurrHashLib := hl68;
-      if LibToUse = 2 then CurrHashLib := hl69;
-      if LibToUse = 3 then CurrHashLib := hl70;
-      ShowResult := Format('%10s',['Running ']);
-      //XYMsg(11+(LibToUse*13),Wherey,ShowResult,black,red);
-      DLabel(11+(LibToUse*13),10+CPUsToUse,ShowResult,10,AlRight,black, red);
-      GotoXy(11+(LibToUse*13),10+CPUsToUse);
-      TestStart := GetTickCount64;
-      FinishMiners := false;
-      SetOMT(CPUsToUse);
-      for LaunchThread := 1 to CPUsToUse do
-         begin
-         MinerThread := TMinerThread.Create(true,LaunchThread);
-         MinerThread.FreeOnTerminate:=true;
-         MinerThread.Start;
-         sleep(1);
-         end;
-      REPEAT
-         sleep(1)
-      UNTIL GetOMTValue = 0;
-      TestEnd := GetTickCount64;
-      TestTime := (TestEnd-TestStart);
-      CPUSpeed := HashesForTest/(testtime/1000);
-      ShowResult := Format('%11s',[FormatFloat('0.00',CPUSpeed*CPUsToUse)]);
-      //XYmsg(11+(LibToUse*13),Wherey,ShowResult,green,black);
-      DLabel(11+(LibToUse*13),10+CPUsToUse,ShowResult,10,AlRight,green, black);
-      end;
-   //writeLn();
-   end;
-//Writeln('------------------------------------------------------------');
-//TextOut(1,11+CpusToUse,'------------------------------------------------------------',white,black);
-HorizLine(11+CpusToUse,1,61,white,black);
-TextOut(1,11+cpustouse,LChar[9],white,black);
-TextOut(61,11+cpustouse,LChar[7],white,black);
-//writeln('');
+DLabel(1,6,'Consominer2 configuration',60,AlCenter,yellow,Green);
+TextOut(1,25,' ENTER to run test, ESC to skip it ',White,green);
 GotoXy(1,25);
-TextOut(1,25,' Test completed. Press [C] to configure, Alt-X to exit. ',White,green);
 Repeat
    sleep(1);
    ExitCode := KeyPressedCode;
-until  ExitCode = 11520;
+until  (ExitCode = 283) or (ExitCode=7181);
+if exitCode = 7181 then
+   begin
+   ClrLine(25);
+   TextOut(1,25,' Running speed test. Please wait ',White,green);
+   DWindow(1,8,61,10,'',white,black);
+   //Writeln('------------------------------------------------------------');
+   //Writeln(Format('| CPUs  | Hashlib65  | Hashlib68  | Hashlib69  | Hashlib70  |',[]));
+   //Writeln('-------------------------------------------------------------');
+   DLabel(2,9,Format(' CPUs  | Hashlib65  | Hashlib68  | Hashlib69  | Hashlib70',[]),59,AlLeft,yellow,black);
+   TextOut(1,10,LChar[10],white,black);
+   TextOut(61,10,LChar[6],white,black);
+   For CPUsToUse := 1 to maxCPU do
+      begin
+      //Write(Format('| %2s    |            |            |            |            |',[IntToStr(CPUsToUse)]));
+      Dlabel(1,10+CPUsToUse,Format(LChar[5]+' %2s    '+LChar[5]+'            '+LChar[5]+'            '+LChar[5]+'            '+LChar[5]+'            '+LChar[5],[IntToStr(CPUsToUse)]),61,AlLEft,lightGray,black);
+      for LibToUse := 0 to 3 do
+         begin
+         if LibToUse = 0 then CurrHashLib := hl65;
+         if LibToUse = 1 then CurrHashLib := hl68;
+         if LibToUse = 2 then CurrHashLib := hl69;
+         if LibToUse = 3 then CurrHashLib := hl70;
+         ShowResult := Format('%10s',['Running ']);
+         //XYMsg(11+(LibToUse*13),Wherey,ShowResult,black,red);
+         DLabel(11+(LibToUse*13),10+CPUsToUse,ShowResult,10,AlRight,black, red);
+         GotoXy(11+(LibToUse*13),10+CPUsToUse);
+         TestStart := GetTickCount64;
+         FinishMiners := false;
+         SetOMT(CPUsToUse);
+         for LaunchThread := 1 to CPUsToUse do
+            begin
+            MinerThread := TMinerThread.Create(true,LaunchThread);
+            MinerThread.FreeOnTerminate:=true;
+            MinerThread.Start;
+            sleep(1);
+            end;
+         REPEAT
+            sleep(1)
+         UNTIL GetOMTValue = 0;
+         TestEnd := GetTickCount64;
+         TestTime := (TestEnd-TestStart);
+         CPUSpeed := HashesForTest/(testtime/1000);
+         ShowResult := Format('%11s',[FormatFloat('0.00',CPUSpeed*CPUsToUse)]);
+         //XYmsg(11+(LibToUse*13),Wherey,ShowResult,green,black);
+         DLabel(11+(LibToUse*13),10+CPUsToUse,ShowResult,10,AlRight,green, black);
+         end;
+      //writeLn();
+      end;
+   //Writeln('------------------------------------------------------------');
+   //TextOut(1,11+CpusToUse,'------------------------------------------------------------',white,black);
+   HorizLine(11+CpusToUse,1,61,white,black);
+   TextOut(1,11+cpustouse,LChar[9],white,black);
+   TextOut(61,11+cpustouse,LChar[7],white,black);
+   //writeln('');
+   ClrLine(25);
+   TextOut(1,25,' Test completed. Press [C] to configure, Alt-X to exit. ',White,green);
+   end
+else
+   begin
+   ClrLine(25);
+   TextOut(1,25,' Press [C] to configure, Alt-X to exit. ',White,green);
+   end;
+GotoXy(1,25);
+Repeat
+   sleep(1);
+   ExitCode := KeyPressedCode;
+until  (ExitCode = 11520) or (ExitCode=11843) or (ExitCode=11875);
 if ExitCode = 11520 then result := true
 else result := false;
 End;
@@ -491,8 +633,8 @@ if MyRunTest then
    if RunTest then exit
    else
       begin
-      Runconfig;
-      exit;
+      if Runconfig>1 then exit
+      else cls(1,6,80,25);
       end;
    end;
 MinerStartUTC := UTCTime;
