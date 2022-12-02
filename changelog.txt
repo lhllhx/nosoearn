@@ -1,3 +1,15 @@
+v1.5
+
+- Nosotime unit implemented.
+- Old TUI code removed.
+- Nosotime clock included.
+
+v1.4
+
+- New text-user interface.
+- Configuration wizard.
+- Updated pools.
+
 v1.3
 
 - Default address changed to project funds address.

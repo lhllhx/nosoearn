@@ -5,7 +5,7 @@ unit consominer2unit;
 interface
 
 uses
-  Classes, SysUtils, IdTCPClient, IdGlobal, strutils, functions;
+  Classes, SysUtils, IdTCPClient, IdGlobal, strutils, functions, nosotime;
 
 Type
 
@@ -75,9 +75,10 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer = '1.4';
-  HasheableChars = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
-  DeveloperAddress = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
+  AppVer            = '1.5';
+  HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
+  DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
+  NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
 
 var
   ArrSources    : Array of TSourcesData;
@@ -486,8 +487,6 @@ if PoolString<> 'ERROR' then // Pool reached
       U_AddressNosoBalance := true;
       end;
    U_TotalPEnding := true;
-
-   TimeOffSet := UTCTime-StrToInt64Def(Parameter(PoolString,12),UTCTime);
    SaveSource(ThisSource);
    SetStatusMsg('Synced with pool '+ThisSource.ip,2{green});
    end

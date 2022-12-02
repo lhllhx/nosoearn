@@ -5,11 +5,10 @@ unit functions;
 interface
 
 uses
-  Classes, SysUtils, MD5, DateUtils, strutils;
+  Classes, SysUtils, MD5, DateUtils, strutils, nosotime;
 
 function GetPrefix(NumberID:integer):string;
 Function HashMD5String(StringToHash:String):String;
-function UTCTime():int64;
 Function NosoHashOld(source:string):string;
 Function BlockAge():integer;
 Function HashrateToShow(speed:int64):String;
@@ -39,20 +38,6 @@ Function HashMD5String(StringToHash:String):String;
 Begin
 result := Uppercase(MD5Print(MD5String(StringToHash)));
 end;
-
-// Returns the UTCTime
-function UTCTime():int64;
-var
-  G_TIMELocalTimeOffset : int64;
-  GetLocalTimestamp : int64;
-  UnixTime : int64;
-Begin
-result := 0;
-G_TIMELocalTimeOffset := GetLocalTimeOffset*60;
-GetLocalTimestamp := DateTimeToUnix(now);
-UnixTime := GetLocalTimestamp+G_TIMELocalTimeOffset;
-result := UnixTime-TimeOffSet;
-End;
 
 Function BlockAge():integer;
 Begin

@@ -1,5 +1,7 @@
-v1.4
+v1.5
 
--
+- Nosotime unit implemented.
+- Old TUI code removed.
+- Nosotime clock included.
 
 
