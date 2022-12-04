@@ -1,7 +1,6 @@
 unit Noso_TUI;
 
 {$mode ObjFPC}{$H+}
-{$codePage CP437}
 
 interface
 
@@ -10,12 +9,25 @@ uses
 
 Type
   TAlign = (AlLeft, AlRight, AlCenter);
-  TBorder = (BdSimple, BdDouble, BdBlock);
+  TBorder = (BdSingle, BdDouble, BdBlock, BdSimple);
 
   TEditData = Record
     OutString : string;
     OutKey    : integer;
-  end;
+    end;
+
+  TConsole = Record
+    Active    : boolean;
+    x1        : integer;
+    y1        : integer;
+    x2        : integer;
+    y2        : integer;
+    Width     : integer;
+    Height    : integer;
+    LastLine  : integer;
+    FColor    : word;
+    BColor    : word;
+    end;
 
 Procedure TextOut(X,Y : Word;Const S : String;FC,BC:word;update:boolean = true);
 Procedure VertLine(Column,y1,y2,FroCol, BackCol:word;Limits:boolean = false);
@@ -28,6 +40,12 @@ Procedure Cls(x1:integer = 0;y1:integer=0;x2:integer=0;y2:integer=0);
 Procedure ClrLine(LNumber:integer;bkcolor:word=black);
 Procedure SetBorder(LBorder:TBorder);
 Procedure DLabel(x,y:word;Texto:String;Lwidth:integer;LAling:TAlign;forCol,BacCol:word);
+
+// Console
+Procedure ClearConsole;
+Procedure SetConsole(x1,y1,x2,y2,fc,bc:word);
+Procedure ToConsole(TextContent:string);
+Procedure ConsoleNewLine;
 
 // KeyBoard
 Function KeyPressedCode:integer;
@@ -53,12 +71,14 @@ Const
   white = video.white;
 
 var
-  Fcolor : word = video.red;
-  BColor : word = video.blue;
-  Borders : Array of string;
+  Fcolor            : word = video.lightgray;
+  BColor            : word = video.black;
+  Borders           : Array of string;
   ActiveBorderStile : TBorder = BdSimple;
-  LChar    : string;
-
+  LChar             : string = #043#045#043#043#124#043#043#043#043#043;
+  MyConsole         : TConsole;
+  SLConsole         : TStringList;
+  LockBorder       : boolean = false;
 
 implementation
 
@@ -81,13 +101,14 @@ var
 Begin
 for counter := y1 to y2 do
    begin
-   TextOut(Column,counter,LChar[5],FroCol,BackCol);
+   TextOut(Column,counter,LChar[5],FroCol,BackCol,false);
    end;
 if limits then
    begin
-   TextOut(Column,y1,LChar[3],FroCol,BackCol);
-   TextOut(Column,y2,LChar[8],FroCol,BackCol);
+   TextOut(Column,y1,LChar[3],FroCol,BackCol,false);
+   TextOut(Column,y2,LChar[8],FroCol,BackCol,false);
    end;
+UpdateScreen(true);
 End;
 
 Procedure HorizLine(filenum,x1,x2,FroCol, BackCol:word;Limits:boolean = false);
@@ -96,13 +117,14 @@ var
 Begin
 for counter := x1 to x2 do
    begin
-   TextOut(counter,filenum,LChar[2],FroCol,BackCol);
+   TextOut(counter,filenum,LChar[2],FroCol,BackCol,false);
    end;
 if limits then
    begin
-   TextOut(x1,filenum,LChar[10],FroCol,BackCol);
-   TextOut(x2,filenum,LChar[6],FroCol,BackCol);
+   TextOut(x1,filenum,LChar[10],FroCol,BackCol,false);
+   TextOut(x2,filenum,LChar[6],FroCol,BackCol,false);
    end;
+UpdateScreen(true);
 End;
 
 Procedure GotoXy(x,y:word);
@@ -181,8 +203,11 @@ End;
 
 Procedure SetBorder(LBorder:TBorder);
 Begin
-ActiveBorderStile := LBorder;
-LCHar := Borders[Ord(LBorder)];
+if not LockBorder then
+   begin
+   ActiveBorderStile := LBorder;
+   LCHar := Borders[Ord(LBorder)];
+   end;
 End;
 
 Procedure DLabel(x,y:word;Texto:String;Lwidth:integer;LAling:TAlign;forCol,BacCol:word);
@@ -197,6 +222,70 @@ else if LAling = AlRight then OutText := Format('%0:'+Lwidth.ToString+'s',[Texto
 else OutText := Format('%0:-'+Lwidth.ToString+'s',[Space(Whites)+Texto]);
 TextOut(X,Y,OutText,ForCol,BacCol);
 End;
+
+//******************************************************************************
+// Console
+//******************************************************************************
+
+Procedure ClearConsole;
+Begin
+MyConsole := Default(TConsole);
+End;
+
+Procedure SetConsole(x1,y1,x2,y2,fc,bc:word);
+var
+  CurrColor : word;
+Begin
+MyConsole.Active:=true;
+MyConsole.x1:=x1;
+MyConsole.x2:=x2;
+MyConsole.y1:=y1;
+MyConsole.y2:=y2;
+MyConsole.width := x2-x1+1;
+MyConsole.height := y2-y1+1;
+MyConsole.LastLine:=0;
+MyConsole.FColor := fc;
+MyConsole.BColor := bc;
+CurrColor := BColor;
+BkColor(bc);
+cls(x1,y1,x2,y2);
+BkColor(CurrColor);
+End;
+
+Procedure ToConsole(TextContent:string);
+var
+  Splits   : integer;
+  Counter  : integer;
+  ToShow   : String;
+Begin
+if not Myconsole.Active then exit;
+if length(TextContent) = 0 then exit;
+Splits := (length(textContent) div MyConsole.width);
+if (length(textContent) mod MyConsole.width) > 0 then inc(Splits);
+For counter := 1 to splits do
+   begin
+   if MyConsole.LastLine>=MyConsole.Height then ConsoleNewLine;
+   ToShow := Copy(TextContent,1+((counter-1)*Myconsole.width),Myconsole.width);
+   TextOut(MyCOnsole.x1,MyConsole.y1+MyConsole.LastLine,ToShow,myconsole.FColor,myconsole.BColor,false);
+   SLConsole.Add(ToShow);
+   Inc(MyConsole.LastLine);
+   end;
+UpdateScreen(true);
+End;
+
+Procedure ConsoleNewLine;
+var
+  counter : integer;
+Begin
+cls(MyConsole.x1,MyConsole.y1,MyConsole.x2,MyConsole.y2);
+for counter := 0 to MyConsole.height-2 do
+   TextOut(MyCOnsole.x1,MyConsole.y1+counter,SLConsole[SLConsole.Count-MyConsole.height+counter+1],white,black,false);
+Dec(MyConsole.LastLine);
+End;
+
+//******************************************************************************
+// Keyboard
+//******************************************************************************
 
 Function KeyPressedCode:integer;
 var
@@ -330,21 +419,29 @@ Repeat
       end;
 until isdone;
 Result := ExitCode;
-
 End;
 
 Initialization
+case
+   GetTextCodePage(Output) of 932,936,949,950,951: LockBorder := true;
+end;
+//SetTextCodePage(Output, 437);
 InitVideo;
 InitKeyBoard;
 ScreenWidth := 80;
 ScreenHeight := 25;
-Setlength(Borders,3);
+Setlength(Borders,4);
+//              ┌   ─   ┬   ┐   │   ┤   ┘   ┴   └   ├
 Borders[0] := #218#196#194#191#179#180#217#193#192#195;
 Borders[1] := #201#205#203#187#186#185#188#202#200#204;
 Borders[2] := #219#219#219#219#219#219#219#219#219#219;
-SetBorder(bdSimple);
+Borders[3] := #043#045#043#043#124#043#043#043#043#043;
+SetBorder(bdSingle);
+ClearConsole;
+SLConsole := TStringList.Create;
 
 Finalization
 DoneKeyBoard;
 DoneVideo;
+SLConsole.Free;
 END.

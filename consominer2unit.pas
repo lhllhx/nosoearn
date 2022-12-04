@@ -20,6 +20,7 @@ Type
      miners     : integer;
      fee        : integer;
      LastPay    : string;
+     MaxShares  : integer;
      end;
 
    TPayment = packed record
@@ -76,13 +77,15 @@ Function GetOMTValue():Integer;
 
 Const
   AppVer            = '1.5';
+  ReleaseDate       = 'Dec 04, 2022';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
+  fpcVersion        = {$I %FPCVERSION%};
 
 var
   ArrSources    : Array of TSourcesData;
-  MAinThreadIsFinished : boolean = false;
+  MainThreadIsFinished : boolean = false;
   SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082';
   ArrLogLines   : array of string;
   FinishProgram : boolean = false;
@@ -240,11 +243,11 @@ if Success then
       Inc(ArrSources[ActivePool].shares);
       U_ActivePool := true;
       SetStatusMsg('Submmited share '+ArrSources[ActivePool].shares.ToString+' to '+ArrSources[ActivePool].ip,2{green});
-      if ArrSources[ActivePool].shares >= MyMaxShares then
+      if ArrSources[ActivePool].shares >= ArrSources[ActivePool].MaxShares then
          begin
          ArrSources[ActivePool].filled:=true;
          ClearSolutions();
-         Sleep(10);
+         Sleep(100);
          FinishMiners := true;
          end;
       end
@@ -300,6 +303,7 @@ Repeat
       ArrSources[length(ArrSources)-1].Miners:=0;
       ArrSources[length(ArrSources)-1].Fee:=0;
       ArrSources[length(ArrSources)-1].LastPay:=GetPoolLastPay(Parameter(ThisSource,0));
+      ArrSources[length(ArrSources)-1].maxshares:=MyMaxShares;
       end;
    Inc(Counter);
    end;
@@ -481,6 +485,7 @@ if PoolString<> 'ERROR' then // Pool reached
    ThisSource.miners      := StrToIntDef(Parameter(PoolString,13),0);
    ThisSource.fee         := StrToIntDef(Parameter(PoolString,14),0);
    SourceNoso             := StrToInt64Def(Parameter(PoolString,15),-1);
+   ThisSource.MaxShares   := StrToIntDef(Parameter(PoolString,16),MyMaxShares);
    If SourceNoso>-1 then
       Begin
       MyAddressBalance := SourceNoso;
@@ -614,7 +619,7 @@ Procedure Tolog(LLine:String);
 Begin
 EnterCriticalSection(CS_Log);
 Insert(LLine,ArrLogLines,Length(ArrLogLines));
-EnterCriticalSection(CS_Log);
+LEaveCriticalSection(CS_Log);
 End;
 
 Procedure CheckLog();

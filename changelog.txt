@@ -3,6 +3,10 @@ v1.5
 - Nosotime unit implemented.
 - Old TUI code removed.
 - Nosotime clock included.
+- Fixed border issue for specified codepages.
+- Included menu page.
+- Page navigation system.
+- Dinamyc max shares per pool.
 
 v1.4
 
