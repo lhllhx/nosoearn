@@ -622,6 +622,8 @@ if KeyCode = 11520 then PageToShow := 10;
 if KeyCode = 15360 then PageToShow := 1;
 End;
 
+{$R *.res}
+
 BEGIN
 Randomize();
 cls;

@@ -2,6 +2,16 @@ unit Noso_TUI;
 
 {$mode ObjFPC}{$H+}
 
+{
+NosoTUI 1.0
+December 6th, 2022
+Noso project unit to manage the output to screen on cli apps.
+No external dependencyes.
+
+Changes:
+
+}
+
 interface
 
 uses

@@ -76,8 +76,8 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer            = '1.5';
-  ReleaseDate       = 'Dec 04, 2022';
+  AppVer            = '1.6';
+  ReleaseDate       = 'Dec 23, 2022';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
@@ -86,7 +86,7 @@ Const
 var
   ArrSources    : Array of TSourcesData;
   MainThreadIsFinished : boolean = false;
-  SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082';
+  SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082 47.87.181.190:8082';
   ArrLogLines   : array of string;
   FinishProgram : boolean = false;
   MAXCPU        : integer = 0;
