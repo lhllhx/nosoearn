@@ -1,3 +1,8 @@
+v1.8
+
+- Help screen.
+- Password filter.
+
 v1.7
 
 - Password added.

@@ -1,4 +1,4 @@
-v1.7
+v1.8
 
-- Password added.
-- Speed test removed.
+- Help screen.
+- Password filter.

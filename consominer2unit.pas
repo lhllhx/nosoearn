@@ -82,6 +82,7 @@ Const
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
   fpcVersion        = {$I %FPCVERSION%};
+  B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 var
   ArrSources    : Array of TSourcesData;
@@ -109,7 +110,7 @@ var
   MyRunTest            : boolean  = True;
   MyMaxShares          : integer = 0;
   MyDonation           : integer = 5;
-  MyPassword           : string = 'mydefault';
+  MyPassword           : string = 'mypasswrd';
   // Miner Variables
   MyAddressBalance      : int64 = 0;
   ArrHashLibs           : array[0..3] of integer;
@@ -188,7 +189,7 @@ TCPclient.ConnectTimeout:= 3000;
 TCPclient.ReadTimeout:=3000;
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SOURCE '+MyAddress+' Cm2'+AppVer);
+TCPclient.IOHandler.WriteLn('SOURCE '+MyAddress+' Cm2'+AppVer+' '+mypassword);
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 EXCEPT on E:Exception do
@@ -225,7 +226,7 @@ Success := false;
 Inc(Trys);
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2v'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress);
+TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2v'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress+' '+mypassword);
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 Success := true;

@@ -15,6 +15,7 @@ Function HashrateToShow(speed:int64):String;
 Function Parameter(LineText:String;ParamNumber:int64):String;
 function Int2Curr(Value: int64): string;
 Function UpTime(FromTime:Int64):string;
+function IsValid58(base58text:string):boolean;
 
 IMPLEMENTATION
 
@@ -191,6 +192,18 @@ remain := remain mod 60;
 seconds := remain;
 if Days > 0 then Result:= Format('%.2dd%.2dh%.2d', [Days, Hours, Minutes])
 else Result:= Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+End;
+
+{Verify if a string is a valid Base58 one}
+function IsValid58(base58text:string):boolean;
+var
+  counter : integer;
+Begin
+  result := true;
+  if Length(base58text) = 0 then Exit(False);
+  for counter := 1 to length(base58text) do
+    if pos (base58text[counter],B58Alphabet) = 0 then
+      Exit(false);
 End;
 
 END.

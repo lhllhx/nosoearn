@@ -411,6 +411,9 @@ Repeat
       GetEdit := ReadEditScreen(22,ActiveRow,MyPassword,38);
       if GetEdit.OutKey = 80 then Inc(ActiveRow);
       if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      if length(GetEdit.OutString)<8 then GetEdit.OutString := MyPassword;
+      if length(GetEdit.OutString)>16 then GetEdit.OutString := MyPassword;
+      if not IsValid58(GetEdit.OutString) then GetEdit.OutString := 'mypasswrd';
       MyPassword := GetEdit.OutString;
       showData;
       end
@@ -468,6 +471,32 @@ until IsDone<>0;
 if IsDone = 1 then PageToShow := 2;    {Miner}
 if IsDone = 2 then PageToShow := 1;   {Exit}
 if IsDone = 3 then PageToShow := 1;    {menu}
+End;
+
+Function RunHelp():integer;
+var
+  KeyCode : integer;
+Begin
+BKColor(black);
+cls(1,7,80,25);
+DLabel(1,6,'Consominer2 Help',70,AlCenter,yellow,Green);
+DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
+DLabel(18,25,' [M] Menu ',16,AlCenter,white,blue);
+
+Dlabel(2,8, '- Use one Noso address per device.',50,alLeft,white,black);
+Dlabel(2,9, '- Use a different public IPv4 per device.',50,alLeft,white,black);
+Dlabel(2,10,'- Your password must be between 8 to 16 chars length.',53,alLeft,white,black);
+Dlabel(2,11,'- Your password must contain only Base58 chars: ',50,alLeft,white,black);
+Dlabel(4,12,B58Alphabet,58,alLeft,green,white);
+Dlabel(2,13,'- For PoPW detailed information, visit ',50,alLeft,white,black);
+Dlabel(41,13,'https://docs.nosocoin.com',25,alLeft,green,black);
+
+Repeat
+   sleep(1);
+   KeyCode := KeyPressedCode;
+until ( (Keycode = 11520) or (Keycode = 12909) or (Keycode = 12877) );
+if KeyCode = 11520 then PageToShow := 10;  {alt+x}
+if ( (KeyCode = 12909) or (KeyCode = 12877) ) then PageToShow := 1;   {m}
 End;
 
 Function RunTest():boolean;
@@ -547,6 +576,7 @@ DLabel(1,6,'Consominer2 Menu',70,AlCenter,yellow,Green);
 DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
 DLabel(18,25,' [M] Mine ',16,AlCenter,white,blue);
 DLabel(35,25,' [S] Settings ',16,AlCenter,black,lightblue);
+DLabel(52,25,' [H] Help ',16,AlCenter,black,green);
 Dwindow(10,8,60,16,'',white,black);
 Vertline (30,9,15,white,black);
 Horizline(10,10,60,white,black,true);
@@ -561,10 +591,12 @@ Repeat
    sleep(1);
    KeyCode := KeyPressedCode;
    if keycode <> 0 then TextOut(1,24,keycode.ToString,white,black);
-until ( (Keycode = 11520) or (Keycode = 12909) or (Keycode = 12877) or (Keycode = 8051) or (Keycode = 8019) );
+until ( (Keycode = 11520) or (Keycode = 12909) or (Keycode = 12877) or (Keycode = 8051)
+         or (Keycode = 8019) or (Keycode = 9064) or (Keycode = 9032));
 if KeyCode = 11520 then PageToShow := 10;  {alt+x}
 if ( (KeyCode = 12909) or (KeyCode = 12877) ) then PageToShow := 2;   {m}
 if ( (KeyCode = 8051) or (KeyCode = 8019) ) then PageToShow := 4;   {S}
+if ( (KeyCode = 9032) or (KeyCode = 9064) ) then PageToShow := 9;   {S}
 End;
 
 Procedure CloseApp();
@@ -655,6 +687,7 @@ TextOut(50,3,'/ __/',green,black);
 TextOut(49,4,'/____',green,black);
 DLabel(57,3,'V'+Appver,4,AlLeft,yellow,black);
 DLabel(57,4,'PoPw',4,AlLeft,red,black);
+DLabel(3,5,'imAOG',12,Alleft,green,black);
 if MyRunTest then PageToShow := 1
 else PageToShow := 2;
 Repeat
@@ -662,6 +695,7 @@ Repeat
    else if PageToShow = 2 then RunMiner
    else if PageToShow = 3 then runtest
    else if PageToShow = 4 then runconfig
+   else if PageToShow = 9 then runhelp
 until PageToShow = 10;
 CloseApp;
 END.
