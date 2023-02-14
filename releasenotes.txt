@@ -1,4 +1,4 @@
-v1.6
+v1.7
 
-- New pool added.
-
+- Password added.
+- Speed test removed.

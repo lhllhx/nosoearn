@@ -340,30 +340,32 @@ var
    DLabel(22,11,MyHAshlib.ToString,38,AlLeft,lightgray,black);
    DLabel(22,12,MyMaxShares.ToString,38,AlLeft,lightgray,black);
    DLabel(22,13,MyDonation.ToString,38,AlLeft,lightgray,black);
-   Dlabel(2,15,'Save & Run',17,alCenter,black,brown);
-   Dlabel(22,15,'Save & Menu',17,alCenter,black,brown);
-   Dlabel(42,15,'Menu',17,alCenter,black,brown);
+   DLabel(22,14,MyPassword,38,AlLeft,lightgray,black);
+   Dlabel(2,16,'Save & Run',17,alCenter,black,brown);
+   Dlabel(22,16,'Save & Menu',17,alCenter,black,brown);
+   Dlabel(42,16,'Menu',17,alCenter,black,brown);
    End;
 
 Begin
 Result := 0;
 BKColor(black);
 cls(1,6,80,25);
-DWindow(1,8,60,14,'',white,black);
+DWindow(1,8,60,15,'',white,black);
 DLabel(1,6,'Consominer2 Configuration',70,AlCenter,yellow,Green);
-VertLine(20,8,14,white,black,true);
+VertLine(20,8,15,white,black,true);
 TextOut(3,9,'Noso address',yellow,black);
 TextOut(3,10,Format('CPUs [%d]',[MaxCPU]),yellow,black);
 TextOut(3,11,'Hashlib',yellow,black);
 TextOut(3,12,'Block shares',yellow,black);
 TextOut(3,13,'Donate %',yellow,black);
+TextOut(3,14,'Password',yellow,black);
 showData;
 ClrLine(25);
 DLabel(1,25,'['#24' '#25'] Navigate',16,AlCenter,white,green);
 DLabel(18,25,'[ENTER] Select',16,AlCenter,white,green);
 Repeat
-   If ActiveRow > 16 then ActiveRow := 9;
-   If ActiveRow < 9 then ActiveRow := 16;
+   If ActiveRow > 17 then ActiveRow := 9;
+   If ActiveRow < 9 then ActiveRow := 17;
    if ActiveRow=9 then
       begin
       GetEdit := ReadEditScreen(22,ActiveRow,MyAddress,38);
@@ -406,11 +408,19 @@ Repeat
       end
    else if ActiveRow = 14 then
       begin
-      Dlabel(2,15,'Save & Run',17,alCenter,white,Green);
-      GotoXy(2,15);
+      GetEdit := ReadEditScreen(22,ActiveRow,MyPassword,38);
+      if GetEdit.OutKey = 80 then Inc(ActiveRow);
+      if GetEdit.OutKey = 72 then Dec(ActiveRow);
+      MyPassword := GetEdit.OutString;
+      showData;
+      end
+   else if ActiveRow = 15 then
+      begin
+      Dlabel(2,16,'Save & Run',17,alCenter,white,Green);
+      GotoXy(2,16);
       NavKey := ReadNavigationKey;
-      if Navkey = 77 then ActiveRow := 15;
-      if Navkey = 72 then ActiveRow := 13;
+      if Navkey = 77 then ActiveRow := 16;
+      if Navkey = 72 then ActiveRow := 14;
       if Navkey = 80 then ActiveRow := 9;
       if navkey = 13 then
          begin
@@ -422,14 +432,14 @@ Repeat
          end;
       ShowData;
       end
-   else if ActiveRow = 15 then
+   else if ActiveRow = 16 then
       begin
-      Dlabel(22,15,'Save & Menu',17,alCenter,white,green);
-      GotoXy(22,15);
+      Dlabel(22,16,'Save & Menu',17,alCenter,white,green);
+      GotoXy(22,16);
       NavKey := ReadNavigationKey;
-      if Navkey = 77 then ActiveRow := 16;
-      if Navkey = 75 then ActiveRow := 14;
-      if Navkey = 72 then ActiveRow := 13;
+      if Navkey = 77 then ActiveRow := 17;
+      if Navkey = 75 then ActiveRow := 15;
+      if Navkey = 72 then ActiveRow := 14;
       if Navkey = 80 then ActiveRow := 9;
       if navkey = 13 then
          begin
@@ -439,13 +449,13 @@ Repeat
          end;
       ShowData;
       end
-   else if ActiveRow = 16 then
+   else if ActiveRow = 17 then
       begin
-      Dlabel(42,15,'Menu',17,alCenter,white,green);
-      GotoXy(42,15);
+      Dlabel(42,16,'Menu',17,alCenter,white,green);
+      GotoXy(42,16);
       NavKey := ReadNavigationKey;
-      if Navkey = 75 then ActiveRow := 15;
-      if Navkey = 72 then ActiveRow := 13;
+      if Navkey = 75 then ActiveRow := 16;
+      if Navkey = 72 then ActiveRow := 14;
       if Navkey = 80 then ActiveRow := 9;
       if navkey = 13 then
          begin
@@ -535,9 +545,8 @@ BKColor(black);
 cls(1,7,80,25);
 DLabel(1,6,'Consominer2 Menu',70,AlCenter,yellow,Green);
 DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
-DLabel(18,25,' [Alt+M] Mine ',16,AlCenter,white,blue);
-DLabel(35,25,' [F3] Test ',16,AlCenter,black,brown);
-DLabel(52,25,' [F4] Settings ',16,AlCenter,black,lightblue);
+DLabel(18,25,' [M] Mine ',16,AlCenter,white,blue);
+DLabel(35,25,' [S] Settings ',16,AlCenter,black,lightblue);
 Dwindow(10,8,60,16,'',white,black);
 Vertline (30,9,15,white,black);
 Horizline(10,10,60,white,black,true);
@@ -551,11 +560,11 @@ Gotoxy(1,25);
 Repeat
    sleep(1);
    KeyCode := KeyPressedCode;
-until ( (Keycode = 11520) or (Keycode = 12800) or (Keycode = 15616) or (Keycode = 15872) );
+   if keycode <> 0 then TextOut(1,24,keycode.ToString,white,black);
+until ( (Keycode = 11520) or (Keycode = 12909) or (Keycode = 12877) or (Keycode = 8051) or (Keycode = 8019) );
 if KeyCode = 11520 then PageToShow := 10;  {alt+x}
-if KeyCode = 12800 then PageToShow := 2;   {alt+m}
-if KeyCode = 15616 then PageToShow := 3;   {F3}
-if KeyCode = 15872 then PageToShow := 4;   {F4}
+if ( (KeyCode = 12909) or (KeyCode = 12877) ) then PageToShow := 2;   {m}
+if ( (KeyCode = 8051) or (KeyCode = 8019) ) then PageToShow := 4;   {S}
 End;
 
 Procedure CloseApp();
@@ -586,7 +595,7 @@ else if Myhashlib = 69 then CurrHashLib := hl69
 else CurrHashLib := hl70;
 Updateheader;
 DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
-DLabel(18,25,' [F2] Menu ',16,AlCenter,black,Magenta);
+DLabel(18,25,' [M] Menu ',16,AlCenter,black,Magenta);
 Drawpools;
 ActivePool := RandonStartPool;
 MainThread := TMainThread.Create(true);
@@ -604,7 +613,7 @@ Repeat
    if U_BlockAge <> UTCtime then UpdateBlockAge;
    Sleep(1);
    KeyCode := KeyPressedCode;
-until  (KeyCode = 11520) or (Keycode = 15360);
+until  (KeyCode = 11520) or (Keycode = 12909) or (Keycode = 12877);
    FinishMiners := true;
    FinishProgram := true;
    DLabel(1,24,'Closing miner...',70,AlCenter,white,red);
@@ -619,7 +628,7 @@ MAinThreadIsFinished := false;
 FinishProgram := false;
 WaitingNextBlock := false;
 if KeyCode = 11520 then PageToShow := 10;
-if KeyCode = 15360 then PageToShow := 1;
+if ( (KeyCode = 12909) or (KeyCode = 12877) ) then PageToShow := 1;
 End;
 
 {$R *.res}

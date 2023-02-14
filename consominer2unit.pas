@@ -76,8 +76,8 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer            = '1.6';
-  ReleaseDate       = 'Dec 23, 2022';
+  AppVer            = '1.7';
+  ReleaseDate       = 'Feb 14, 2023';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
@@ -109,6 +109,7 @@ var
   MyRunTest            : boolean  = True;
   MyMaxShares          : integer = 0;
   MyDonation           : integer = 5;
+  MyPassword           : string = 'mydefault';
   // Miner Variables
   MyAddressBalance      : int64 = 0;
   ArrHashLibs           : array[0..3] of integer;
@@ -407,6 +408,8 @@ writeln(FileConfig,'** Max number of shares to be submitted to each pool. Use 0 
 writeln(FileConfig,'maxshares '+MyMaxShares.ToString);
 writeln(FileConfig,'** Enter a valid number between 0-99 as your % volunteer donation for developer.');
 writeln(FileConfig,'donate '+MyDonation.ToString);
+writeln(FileConfig,'** Enter your password to be identified by the pools. 8-16 Base58 chars length.');
+writeln(FileConfig,'password '+MyPassword);
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do
    begin
@@ -430,6 +433,7 @@ while not eof(FileConfig) do
    if uppercase(Parameter(linea,0)) = 'MAXSHARES' then MyMaxShares := StrToIntDef(Parameter(linea,1),9999);
    if MyMaxShares < 1 then MyMaxShares := 9999;
    if uppercase(Parameter(linea,0)) = 'DONATE' then MyDonation := StrToIntDef(Parameter(linea,1),5);
+   if uppercase(Parameter(linea,0)) = 'PASSWORD' then MyPassword := Parameter(linea,1);
    end;
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do

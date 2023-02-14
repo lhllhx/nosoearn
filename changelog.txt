@@ -1,3 +1,12 @@
+v1.7
+
+- Password added.
+- Speed test removed.
+
+v1.6
+
+- New pool added.
+
 v1.5
 
 - Nosotime unit implemented.
