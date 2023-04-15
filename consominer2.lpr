@@ -690,6 +690,7 @@ DLabel(50,4,'PoPw',4,AlLeft,red,black);
 DLabel(3,5,'imAOG',12,Alleft,green,black);
 if MyRunTest then PageToShow := 1
 else PageToShow := 2;
+
 Repeat
    if PageToShow = 1 then RunMenu
    else if PageToShow = 2 then RunMiner

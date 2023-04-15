@@ -76,7 +76,7 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer            = '2.0';
+  AppVer            = '2.1';
   ReleaseDate       = 'Apr 15, 2023';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
@@ -87,7 +87,7 @@ Const
 var
   ArrSources    : Array of TSourcesData;
   MainThreadIsFinished : boolean = false;
-  DefaultSources : string = 'nosofish.xyz:8082 pool.noso-akkarin.com:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 47.87.181.190:8082';
+  DefaultSources : string = 'pool.nosofish.xyz:8082 pool.noso-akkarin.com:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 47.87.181.190:8082';
 
   SourcesStr    : string = '';
   ArrLogLines   : array of string;
@@ -191,7 +191,7 @@ TCPclient.ConnectTimeout:= 3000;
 TCPclient.ReadTimeout:=3000;
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SOURCE '+MyAddress+' Cm2'+AppVer+' '+mypassword);
+TCPclient.IOHandler.WriteLn('SOURCE '+MyAddress+' Cm2'+AppVer+' '+HashMD5String(mypassword+Myaddress+TCPclient.Host));
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 EXCEPT on E:Exception do
@@ -228,7 +228,7 @@ Success := false;
 Inc(Trys);
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2v'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress+' '+mypassword);
+TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2v'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress+' '+HashMD5String(mypassword+Myaddress+TCPclient.Host));
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 Success := true;
@@ -288,12 +288,13 @@ Procedure LoadSources();
 var
   ThisSource : string;
   Counter : integer = 0;
+  AlreadyLoaded : string = '';
 Begin
 SetLEngth(ArrSources,0);
 Repeat
    begin
    ThisSource := Parameter(SourcesStr,counter);
-   If ThisSource<> '' then
+   If ( (ThisSource<> '') and (Not AnsiContainsStr(Uppercase(AlreadyLoaded),Uppercase(ThisSource))) ) then
       begin
       ThisSource := StringReplace(ThisSource,':',' ',[rfReplaceAll, rfIgnoreCase]);
       SetLEngth(ArrSources,length(ArrSources)+1);
@@ -308,6 +309,7 @@ Repeat
       ArrSources[length(ArrSources)-1].Fee:=0;
       ArrSources[length(ArrSources)-1].LastPay:=GetPoolLastPay(Parameter(ThisSource,0));
       ArrSources[length(ArrSources)-1].maxshares:=MyMaxShares;
+      AlreadyLoaded := AlreadyLoaded + ThisSource;
       end;
    Inc(Counter);
    end;
@@ -418,7 +420,7 @@ writeln(FileConfig,'password '+MyPassword);
 writeln(FileConfig,'** Enter one earning pool per line on format IPv4:port. None to use default');
 if bydefault then
    begin
-   writeln(FileConfig,'pool nosofish.xyz:8082');
+   writeln(FileConfig,'pool pool.nosofish.xyz:8082');
    writeln(FileConfig,'pool pool.noso-akkarin.com:8082');
    writeln(FileConfig,'pool nosopool.estripa.online:8082');
    writeln(FileConfig,'pool pool.nosomn.com:8082');
