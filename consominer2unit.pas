@@ -87,7 +87,7 @@ Const
 var
   ArrSources    : Array of TSourcesData;
   MainThreadIsFinished : boolean = false;
-  DefaultSources : string = 'nosofish.xyz:8082 47.87.158.147:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 47.87.181.190:8082';
+  DefaultSources : string = 'nosofish.xyz:8082 pool.noso-akkarin.com:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 47.87.181.190:8082';
 
   SourcesStr    : string = '';
   ArrLogLines   : array of string;
@@ -419,7 +419,7 @@ writeln(FileConfig,'** Enter one earning pool per line on format IPv4:port. None
 if bydefault then
    begin
    writeln(FileConfig,'pool nosofish.xyz:8082');
-   writeln(FileConfig,'pool 47.87.158.147:8082');
+   writeln(FileConfig,'pool pool.noso-akkarin.com:8082');
    writeln(FileConfig,'pool nosopool.estripa.online:8082');
    writeln(FileConfig,'pool pool.nosomn.com:8082');
    writeln(FileConfig,'pool 47.87.181.190:8082');

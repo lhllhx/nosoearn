@@ -1,4 +1,6 @@
 v2.0
 
 - Name rebranded to Nosoearn.
+- Custom pools.
+- Hang on main thread bug solved.
 
