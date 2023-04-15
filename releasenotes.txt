@@ -1,4 +1,4 @@
-v1.8
+v2.0
 
-- Help screen.
-- Password filter.
+- Name rebranded to Nosoearn.
+

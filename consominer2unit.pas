@@ -49,7 +49,7 @@ Function GetTotalPending():Int64;
 Procedure SaveSource(LSource:TSourcesData);
 Procedure SetStatusMsg(Lmessage:string;Lcolor:integer);
 // Disk access
-Procedure CreateConfig();
+Procedure CreateConfig(ByDefault : boolean = false);
 Procedure LoadConfig();
 Function CheckSource():integer;
 // Log manage
@@ -76,8 +76,8 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer            = '1.7';
-  ReleaseDate       = 'Feb 14, 2023';
+  AppVer            = '2.0';
+  ReleaseDate       = 'Apr 15, 2023';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
@@ -87,7 +87,9 @@ Const
 var
   ArrSources    : Array of TSourcesData;
   MainThreadIsFinished : boolean = false;
-  SourcesStr    : string = 'nosofish.xyz:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 159.196.1.198:8082 47.87.181.190:8082';
+  DefaultSources : string = 'nosofish.xyz:8082 47.87.158.147:8082 nosopool.estripa.online:8082 pool.nosomn.com:8082 47.87.181.190:8082';
+
+  SourcesStr    : string = '';
   ArrLogLines   : array of string;
   FinishProgram : boolean = false;
   MAXCPU        : integer = 0;
@@ -393,7 +395,9 @@ Statusmsg := Lmessage;
 StatusColor := LColor;
 End;
 
-Procedure CreateConfig();
+Procedure CreateConfig(ByDefault : boolean = false);
+var
+  counter : integer;
 Begin
 TRY
 rewrite(FileConfig);
@@ -411,6 +415,20 @@ writeln(FileConfig,'** Enter a valid number between 0-99 as your % volunteer don
 writeln(FileConfig,'donate '+MyDonation.ToString);
 writeln(FileConfig,'** Enter your password to be identified by the pools. 8-16 Base58 chars length.');
 writeln(FileConfig,'password '+MyPassword);
+writeln(FileConfig,'** Enter one earning pool per line on format IPv4:port. None to use default');
+if bydefault then
+   begin
+   writeln(FileConfig,'pool nosofish.xyz:8082');
+   writeln(FileConfig,'pool 47.87.158.147:8082');
+   writeln(FileConfig,'pool nosopool.estripa.online:8082');
+   writeln(FileConfig,'pool pool.nosomn.com:8082');
+   writeln(FileConfig,'pool 47.87.181.190:8082');
+   end
+else
+  begin
+  for counter := 0 to length(ArrSources)-1 do
+     writeln(FileConfig,'pool '+ArrSources[counter].ip+':'+ArrSources[counter].port.ToString);
+  end;
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do
    begin
@@ -435,8 +453,10 @@ while not eof(FileConfig) do
    if MyMaxShares < 1 then MyMaxShares := 9999;
    if uppercase(Parameter(linea,0)) = 'DONATE' then MyDonation := StrToIntDef(Parameter(linea,1),5);
    if uppercase(Parameter(linea,0)) = 'PASSWORD' then MyPassword := Parameter(linea,1);
+   if uppercase(Parameter(linea,0)) = 'POOL' then SourcesStr := SourcesStr+Parameter(linea,1)+' ';
    end;
 CloseFile(FileConfig);
+Trim(SourcesStr);
 EXCEPT ON E:EXCEPTION do
    begin
    ToLog('Error accessing data file: '+E.Message);
@@ -725,7 +745,7 @@ End;
 
 
 INITIALIZATION
-Assignfile(FileConfig, 'consominer2.cfg');
+Assignfile(FileConfig, 'nosoearn.cfg');
 Assignfile(FileLog, 'log.txt');
 Assignfile(FilePayments, 'payments.dat');
 Assignfile(FileRAWPayments, 'payments.txt');

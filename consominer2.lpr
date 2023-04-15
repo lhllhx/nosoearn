@@ -288,7 +288,7 @@ Begin
 DWindow(1,10,69,12,'',lightgray,black);
 TextOut(1,12,LChar[10],lightgray,black);
 TextOut(69,12,LChar[6],lightgray,black);
-TextOut(2,11,format(' %0:-17s | %6s | %6s | %12s | %3s | %6s ',['Pool','Miners','Fee','Balance','Pay','Shares']),yellow,black);
+TextOut(2,11,format(' %0:-17s | %6s | %6s | %12s | %3s | %6s ',['Pool','Count','Fee','Balance','Pay','Shares']),yellow,black);
 for counter :=0 to length(ArrSources)-1 do
     begin
     PoolName := Format('%0:-17s',[ArrSources[counter].ip]);
@@ -351,7 +351,7 @@ Result := 0;
 BKColor(black);
 cls(1,6,80,25);
 DWindow(1,8,60,15,'',white,black);
-DLabel(1,6,'Consominer2 Configuration',70,AlCenter,yellow,Green);
+DLabel(1,6,'Nosoearn Configuration',70,AlCenter,yellow,Green);
 VertLine(20,8,15,white,black,true);
 TextOut(3,9,'Noso address',yellow,black);
 TextOut(3,10,Format('CPUs [%d]',[MaxCPU]),yellow,black);
@@ -479,7 +479,7 @@ var
 Begin
 BKColor(black);
 cls(1,7,80,25);
-DLabel(1,6,'Consominer2 Help',70,AlCenter,yellow,Green);
+DLabel(1,6,'Nosoearn Help',70,AlCenter,yellow,Green);
 DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
 DLabel(18,25,' [M] Menu ',16,AlCenter,white,blue);
 
@@ -511,7 +511,7 @@ var
 Begin
 BKColor(black);
 cls(1,6,80,25);
-DLabel(1,6,'Consominer2 Test',70,AlCenter,yellow,Green);
+DLabel(1,6,'Nosoearn Test',70,AlCenter,yellow,Green);
 GotoXy(1,25);
 ClrLine(25);
 TextOut(1,25,' Running speed test. Please wait ',White,green);
@@ -572,7 +572,7 @@ var
 Begin
 BKColor(black);
 cls(1,7,80,25);
-DLabel(1,6,'Consominer2 Menu',70,AlCenter,yellow,Green);
+DLabel(1,6,'Nosoearn Menu',70,AlCenter,yellow,Green);
 DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
 DLabel(18,25,' [M] Mine ',16,AlCenter,white,blue);
 DLabel(35,25,' [S] Settings ',16,AlCenter,black,lightblue);
@@ -603,7 +603,7 @@ Procedure CloseApp();
 Begin
 cls;
 GotoXy(1,1);
-Writeln('Consominer2 Properly closed');
+Writeln('Nosoearn Properly closed');
 Writeln('Done. Bye!');
 End;
 
@@ -668,25 +668,25 @@ End;
 BEGIN
 Randomize();
 cls;
-if not FileExists('consominer2.cfg') then CreateConfig();
+if fileexists('consominer2.cfg') then renamefile('consominer2.cfg','nosoearn.cfg');
+
+if not FileExists('nosoearn.cfg') then CreateConfig(true);
 if not FileExists('log.txt') then CreateLogFile();
 if not FileExists('payments.dat') then CreatePaymentsFile();
 if not FileExists('payments.txt') then CreateRAWPaymentsFile();
 MaxCPU:= {$IFDEF UNIX}GetSystemThreadCount{$ELSE}GetCPUCount{$ENDIF};
 LoadConfig();
-CreateConfig();
+if SourcesStr = '' then SourcesStr := DefaultSources;
 LoadSources();
+CreateConfig();
 LoadPreviousPayments;
-TextOut(1,1,'    _____                         _',white,black);
-TextOut(1,2,'   / ___/__  ___  ___ ___  __ _  (_)__  ___ ____',white,black);
-TextOut(1,3,'  / /__/ _ \/ _ \(_-</ _ \/    \/ / _ \/ -_) __/',white,black);
-TextOut(1,4,'  \___/\___/_//_/___/\___/_/_/_/_/_//_/\__/_/',white,black);
-TextOut(52,1,'___',green,black);
-TextOut(51,2,'|_  |',green,black);
-TextOut(50,3,'/ __/',green,black);
-TextOut(49,4,'/____',green,black);
-DLabel(57,3,'V'+Appver,4,AlLeft,yellow,black);
-DLabel(57,4,'PoPw',4,AlLeft,red,black);
+
+TextOut(1,1,'   / | / /___  _________  ___  ____ __________ ',white,black);
+TextOut(1,2,'  /  |/ / __ \/ ___/ __ \/ _ \/ __ `/ ___/ __ \',white,black);
+TextOut(1,3,' / /|  / /_/ (__  ) /_/ /  __/ /_/ / /  / / / /',white,black);
+TextOut(1,4,'/_/ |_/\____/____/\____/\___/\__,_/_/  /_/ /_/',white,black);
+DLabel(50,3,'V'+Appver,4,AlLeft,yellow,black);
+DLabel(50,4,'PoPw',4,AlLeft,red,black);
 DLabel(3,5,'imAOG',12,Alleft,green,black);
 if MyRunTest then PageToShow := 1
 else PageToShow := 2;
