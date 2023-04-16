@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
+        operating-system: [ ubuntu-20.04 ]
         lazarus-versions: [ stable]
 
     steps:
@@ -37,50 +37,30 @@ jobs:
     - name: Install packages
       run: lazbuild -qqq Packages/Indy10/indylaz.lpk
 
-    - name: Build the Main App (Windows)
-      if: ${{ matrix.operating-system == 'windows-latest' }}
-      run: |
-        lazbuild -B --bm=Release "consominer2.lpi"
-        mv nosoearn.exe nosoearn-x86_64-win64.exe
+
 
     - name: Build the Main App (Ubuntu)
-      if: ${{ matrix.operating-system == 'ubuntu-latest' }}
+      if: ${{ matrix.operating-system == 'ubuntu-20.04' }}
       run: |
         lazbuild -B --bm=Release "consominer2.lpi"
         mv nosoearn nosoearn-x86_64-linux
 
-    - name: Build the Main App (macOS)
-      if: ${{ matrix.operating-system == 'macos-latest' }}
-      run: |
-        lazbuild -B --bm=Release "consominer2.lpi"
-        mv nosoearn nosoearn-x86_64-darwin
 
-    - name: Upload binary (Windows)
-      if: ${{ (matrix.operating-system == 'windows-latest')  &&  (matrix.lazarus-versions == 'stable') }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: nosoearn
-        path: nosoearn-x86_64-win64.exe
 
     - name: Upload binary (Ubuntu)
-      if: ${{ (matrix.operating-system == 'ubuntu-latest')  &&  (matrix.lazarus-versions == 'stable') }}
+      if: ${{ (matrix.operating-system == 'ubuntu-20.04')  &&  (matrix.lazarus-versions == 'stable') }}
       uses: actions/upload-artifact@v2
       with:
         name: nosoearn
         path: nosoearn-x86_64-linux
 
-    - name: Upload binary (macOS)
-      if: ${{ (matrix.operating-system == 'macos-latest')  &&  (matrix.lazarus-versions == 'stable') }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: nosoearn
-        path: nosoearn-x86_64-darwin
+
 
   package-release:
     if: contains(github.ref, '/tags/')
 
     name: Package and create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build
 
     steps:
@@ -100,9 +80,7 @@ jobs:
     - name: Create release files
       run: |
         cd nosoearn
-        chmod +x nosoearn-x86_64-linux nosoearn-x86_64-darwin
-        zip -r nosoearn-${{ steps.vars.outputs.tag }}-x86_64-win64.zip nosoearn-x86_64-win64.exe
-        tar -zcvf nosoearn-${{ steps.vars.outputs.tag }}-x86_64-linux.tar.gz nosoearn-x86_64-linux
+        chmod +x nosoearn-x86_64-linux
         tar -zcvf nosoearn-${{ steps.vars.outputs.tag }}-x86_64-darwin.tar.gz nosoearn-x86_64-darwin
 
     - name: Create GitHub release
